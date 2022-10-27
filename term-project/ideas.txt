@@ -1,0 +1,15 @@
+4 Player Chess:
+Rules: 
+2 v 2, once any player on a team is mated --> game ends
+pawn promote on 11th rank
+red, then clockwise
+Some observations:
+Castling is harder --> performing an earlier castle may be important
+ - an early castle break can occur w/ moving a king's pawn when the player clockwise (after you) already moved his 
+   - on the flipside, this also means, you should not move king's pawn if the previous player moved his
+Teammate's pieces count as protection for taking pieces
+Turn based system means you can get free pieces if your teammate checks, and then you position yourself to take a pieces
+  from the checked player. 
+Checkmates only occur when it gets to the player in checkmate (allows partner to move and prevent)
+An interesting opening trap: move king pawn, next player moves queen pawn (maybe necessary idk), teammate moves king pawn
+ - if the other player moves king pawn --> game ends (queen takes queen, teammate bishop to protect)
