@@ -13,3 +13,23 @@ Turn based system means you can get free pieces if your teammate checks, and the
 Checkmates only occur when it gets to the player in checkmate (allows partner to move and prevent)
 An interesting opening trap: move king pawn, next player moves queen pawn (maybe necessary idk), teammate moves king pawn
  - if the other player moves king pawn --> game ends (queen takes queen, teammate bishop to protect)
+
+
+Notes on 4PlayerChess Qt Application:
+Checkmates aren't properly handled (nor are checks)
+ - checks: algorithm.py line 938
+ - checkmates: either make functions in the bitboard (don't do) or come up with a check that uses prev defined functions
+   (maybe inefficient?)
+Pawn Promotion not encoded
+En-passant? Does it work? --> test chess.com game
+FEN4 notation seems to be the 4 player chess movement notation
+There might already be starting code to quickly convert chess.com moves to this and vice versa
+ - some functions in the algorithm class, can we link this with chess.com in some way?
+GameState handled by nodes in a tree representing the states of the game (allows history and variations)
+Game Loop:
+- Create new game:
+  - generate default board state in algorithm (and init bitmap board)
+- Repeat Forever:
+  - wait for actions in gui (this is what we will need to reroute)
+    - when made, go to make move function in algorithm (which handles the move and sets next player)
+  
