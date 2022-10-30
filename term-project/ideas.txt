@@ -21,7 +21,7 @@ Checkmates aren't properly handled (nor are checks)
  - checkmates: either make functions in the bitboard (don't do) or come up with a check that uses prev defined functions
    (maybe inefficient?)
 Pawn Promotion not encoded
-En-passant? Does it work? --> test chess.com game
+En-passant --> needs code
 FEN4 notation seems to be the 4 player chess movement notation
 There might already be starting code to quickly convert chess.com moves to this and vice versa
  - some functions in the algorithm class, can we link this with chess.com in some way?
@@ -32,4 +32,16 @@ Game Loop:
 - Repeat Forever:
   - wait for actions in gui (this is what we will need to reroute)
     - when made, go to make move function in algorithm (which handles the move and sets next player)
-  
+
+Work for 11/4:
+Checkmates and checks: Miles
+ - checkmate checks, movement restrictions based on them
+ - handle teammate protection
+Pawn Promotion and En-passant: Yichen
+Add AI actors using strategy pattern: Andrew
+ - class: Agent
+   - strategy: interface
+     - random moves extends strategy
+     - minimax extends strategy
+     - v2 extends strategy
+
