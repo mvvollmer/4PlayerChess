@@ -37,7 +37,7 @@ Work for 11/4:
 Checkmates and checks: Miles
  - checkmate checks, movement restrictions based on them
  - handle teammate protection
-Pawn Promotion and En-passant: Yichen
+Pawn Promotion and En-passant: Yichen seen
 Add AI actors using strategy pattern: Andrew
  - class: Agent
    - strategy: interface
