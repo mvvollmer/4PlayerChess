@@ -23,12 +23,15 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QRect
 from gui.main import MainWindow
+sys.path.append('./4PlayerChess-master/')
+from actors.generate_actors import generate_actors
 
 
 def main():
     """Creates application and main window and sets application icon."""
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('resources/img/icon.svg'))
+    actors = generate_actors([*sys.argv])
     window = MainWindow()
     screen = QRect(app.desktop().availableGeometry())
     x = screen.left() + (screen.width() - window.width()) / 2
