@@ -20,7 +20,7 @@
 
 from PyQt5.QtWidgets import QMainWindow, QSizePolicy, QLayout, QListWidget, QListWidgetItem, QListView, QFrame, \
     QFileDialog, QMenu, QAction, QDialog, QDialogButtonBox, QScrollArea
-from PyQt5.QtCore import Qt, QSize, QPoint, QRect, QSettings, QUrl
+from PyQt5.QtCore import Qt, QSize, QPoint, QRect, QSettings, QUrl, QTimer
 from PyQt5.QtGui import QIcon, QColor, QFont, QFontMetrics, QPainter, QDesktopServices
 from ui.mainwindow import Ui_MainWindow
 from ui.settings import Ui_Preferences
@@ -53,6 +53,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Show license notice
         self.statusbar.showMessage(APP + '. Copyright (C) 2018, GammaDeltaII (GNU GPL-3.0-or-later)', 5000)
+
+        self.timer = QTimer(self)
 
         # Create algorithm instance (view instance is already created in UI code)
         self.algorithm = Teams(actors)
@@ -148,6 +150,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.clickPoint = QPoint()
         self.selectedSquare = 0
         self.moveHighlight = 0
+
+        self.timer.timeout.connect(self.game_loop)
+        self.timer.start(100)
+
+    def game_loop(self):
+      if self.algorithm.currentPlayer in self.algorithm.aiActorPos:
+        for actor in self.algorithm.actors:
+          if self.algorithm.currentPlayer == actor[0]:
+            fromFile, fromRank, toFile, toRank = actor[1].make_move(self.algorithm.board)
+            self.algorithm.makeMove(fromFile, fromRank, toFile, toRank)
 
     def checkUpdate(self):
         """Checks if update is available and shows update dialog."""

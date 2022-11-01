@@ -24,6 +24,7 @@ from collections import deque
 from datetime import datetime
 from re import split
 from gui.board import Board
+from time import sleep
 
 # Load settings
 COM = '4pc'
@@ -169,10 +170,6 @@ class Algorithm(QObject):
         if self.currentPlayer == value:
             return
         self.currentPlayer = value
-        if value in self.aiActorPos:
-          for actor in self.actors:
-            if value == actor[0]:
-              actor[1].make_move(self.board)
         self.setPlayerQueue(self.currentPlayer)
         self.currentPlayerChanged.emit(self.currentPlayer)
 
@@ -926,6 +923,22 @@ class Teams(Algorithm):
         super().__init__(actors)
         self.variant = 'Teams'
 
+    # def setCurrentPlayer(self, value):
+    #   super().setCurrentPlayer(value)
+    #   if value in self.aiActorPos:
+    #     for actor in self.actors:
+    #       if value == actor[0]:
+    #         fromFile, fromRank, toFile, toRank = actor[1].make_move(self.board)
+    #         self.makeMove(fromFile, fromRank, toFile, toRank)
+
+    def game_loop(self):
+      while True:
+        if self.currentPlayer in self.aiActorPos:
+          for actor in self.actors:
+            if self.currentPlayer == actor[0]:
+              fromFile, fromRank, toFile, toRank = actor[1].make_move(self.board)
+              self.makeMove(fromFile, fromRank, toFile, toRank)
+
     def makeMove(self, fromFile, fromRank, toFile, toRank):
         """Moves piece from square (fromFile, fromRank) to square (toFile, toRank), if the move is valid."""
         if self.currentPlayer == self.NoPlayer:
@@ -971,16 +984,16 @@ class Teams(Algorithm):
         # Increment move number
         self.moveNumber += 1
 
-        # Rotate player queue and get next player from the queue (first element)
-        self.playerQueue.rotate(-1)
-        self.setCurrentPlayer(self.playerQueue[0])
-
         # Update FEN4 and PGN4
         fen4 = self.getFen4()
         self.getPgn4()
 
         # Store FEN4 in current node
         self.currentMove.fen4 = fen4
+
+        # Rotate player queue and get next player from the queue (first element)
+        self.playerQueue.rotate(-1)
+        self.setCurrentPlayer(self.playerQueue[0])
 
         return True
 

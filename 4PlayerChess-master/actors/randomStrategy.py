@@ -1,4 +1,5 @@
 import sys
+import random
 
 sys.path.append('./4PlayerChess-master/')
 from actors.strategy import Strategy
@@ -9,7 +10,13 @@ class RandomStrategy(Strategy):
   def __init__(self, player):
     super().__init__(player)
   def make_move(self, board: Board):
-    print(super().getMovablePieces(board))
+    movableP = super().getMovablePieces(board)
+    space, file, rank = random.choice(movableP)
+    piece = board.getPiece(space)
+    moves, captures = self.getLegalMoves(board, piece, file, rank)
+    poss_moves = moves + captures
+    toFile, toRank = random.choice(poss_moves)
+    return file, rank, toFile, toRank
 
 
 
