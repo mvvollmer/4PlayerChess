@@ -32,7 +32,7 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('resources/img/icon.svg'))
     actors = generate_actors([*sys.argv])
-    window = MainWindow()
+    window = MainWindow(actors)
     screen = QRect(app.desktop().availableGeometry())
     x = screen.left() + (screen.width() - window.width()) / 2
     y = screen.top() + (screen.height() - window.height()) / 2

@@ -60,7 +60,7 @@ class Algorithm(QObject):
                         '14/bR,bP,10,gP,gR/bN,bP,10,gP,gN/bB,bP,10,gP,gB/bK,bP,10,gP,gQ/bQ,bP,10,gP,gK/bB,bP,10,gP,gB/'\
                         'bN,bP,10,gP,gN/bR,bP,10,gP,gR/14/3,rP,rP,rP,rP,rP,rP,rP,rP,3/3,rR,rN,rB,rQ,rK,rB,rN,rR,3'
 
-    def __init__(self):
+    def __init__(self, actors):
         super().__init__()
         self.variant = '?'
         self.board = Board(14, 14)
@@ -83,6 +83,8 @@ class Algorithm(QObject):
         self.inverseMoveDict = dict()
         self.index = 0  # Used by getMoveText() method
         self.fenMoveNumber = 1
+        self.actors = actors
+        self.aiActorPos = list(map(lambda x: x[0], actors))
 
     class Node:
         """Generic node class. Basic element of a tree."""
@@ -167,6 +169,10 @@ class Algorithm(QObject):
         if self.currentPlayer == value:
             return
         self.currentPlayer = value
+        if value in self.aiActorPos:
+          for actor in self.actors:
+            if value == actor[0]:
+              actor[1].make_move(self.board)
         self.setPlayerQueue(self.currentPlayer)
         self.currentPlayerChanged.emit(self.currentPlayer)
 
@@ -916,8 +922,8 @@ class Algorithm(QObject):
 
 class Teams(Algorithm):
     """A subclass of Algorithm for the 4-player chess Teams variant."""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, actors):
+        super().__init__(actors)
         self.variant = 'Teams'
 
     def makeMove(self, fromFile, fromRank, toFile, toRank):
