@@ -34,7 +34,7 @@ Game Loop:
     - when made, go to make move function in algorithm (which handles the move and sets next player)
 
 Work for 11/4:
-Checkmates and checks: Miles
+Checkmates and checks: Miles finally seen
  - checkmate checks, movement restrictions based on them
  - handle teammate protection
 Pawn Promotion and En-passant: Yichen seen
