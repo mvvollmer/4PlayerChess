@@ -45,3 +45,7 @@ Add AI actors using strategy pattern: Andrew
      - minimax extends strategy
      - v2 extends strategy
 
+New work deadlines:
+ - get castling working, en-passant (Andrew)
+ - debug checkmate code (Miles)
+ - pawn promotion (Yichen)

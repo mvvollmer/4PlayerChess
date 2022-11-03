@@ -61,6 +61,8 @@ class Board(QObject):
         self.occupiedBB = 0
         self.castle = []
         self.initBoard()
+        self.colorMapping = {'r': 0, 'b': 1, 'y': 2, 'g': 3}
+        self.pieceMapping = {'P': 4, 'N': 5, 'B': 6, 'R': 7, 'Q': 8, 'K': 9}
 
     def pieceSet(self, color, piece):
         """Gets set of pieces of one type and color."""
@@ -1014,3 +1016,19 @@ class Board(QObject):
                 fen4 += '/'
         fen4 = fen4[:-1]
         return fen4
+
+  # Andrew's board helper functions:
+    def fileRankToIndex(self, file: int, rank: int):
+      # convert file and rank into an index usable by the boardData
+      return file + rank * self.files
+
+    def indexToFileRank(self, index: int):
+      # convert index (on the boardData) to file rank
+      rank = index // self.files
+      file = index % self.files
+      return file, rank
+    
+    def getPiece(self, boardPiece: str):
+      # get the relevant piece int given a str boardPiece
+      return self.pieceMapping[boardPiece[1]]
+

@@ -24,6 +24,7 @@ from collections import deque
 from datetime import datetime
 from re import split
 from gui.board import Board
+from time import sleep
 
 # Load settings
 COM = '4pc'
@@ -60,7 +61,7 @@ class Algorithm(QObject):
                         '14/bR,bP,10,gP,gR/bN,bP,10,gP,gN/bB,bP,10,gP,gB/bK,bP,10,gP,gQ/bQ,bP,10,gP,gK/bB,bP,10,gP,gB/'\
                         'bN,bP,10,gP,gN/bR,bP,10,gP,gR/14/3,rP,rP,rP,rP,rP,rP,rP,rP,3/3,rR,rN,rB,rQ,rK,rB,rN,rR,3'
 
-    def __init__(self):
+    def __init__(self, actors):
         super().__init__()
         self.variant = '?'
         self.board = Board(14, 14)
@@ -83,6 +84,8 @@ class Algorithm(QObject):
         self.inverseMoveDict = dict()
         self.index = 0  # Used by getMoveText() method
         self.fenMoveNumber = 1
+        self.actors = actors
+        self.aiActorPos = list(map(lambda x: x[0], actors))
 
     class Node:
         """Generic node class. Basic element of a tree."""
@@ -916,8 +919,8 @@ class Algorithm(QObject):
 
 class Teams(Algorithm):
     """A subclass of Algorithm for the 4-player chess Teams variant."""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, actors):
+        super().__init__(actors)
         self.variant = 'Teams'
 
     def makeMove(self, fromFile, fromRank, toFile, toRank):
@@ -965,16 +968,16 @@ class Teams(Algorithm):
         # Increment move number
         self.moveNumber += 1
 
-        # Rotate player queue and get next player from the queue (first element)
-        self.playerQueue.rotate(-1)
-        self.setCurrentPlayer(self.playerQueue[0])
-
         # Update FEN4 and PGN4
         fen4 = self.getFen4()
         self.getPgn4()
 
         # Store FEN4 in current node
         self.currentMove.fen4 = fen4
+
+        # Rotate player queue and get next player from the queue (first element)
+        self.playerQueue.rotate(-1)
+        self.setCurrentPlayer(self.playerQueue[0])
 
         return True
 
