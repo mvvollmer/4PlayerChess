@@ -398,7 +398,7 @@ class Board(QObject):
 
         elif piece == ROOK:
             moves = []
-            for move in self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask
+            for move in self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask:
                 attacks = len(attackRays)
                 blocks = 0
                 for ray in attackRays:
