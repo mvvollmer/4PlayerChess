@@ -423,11 +423,7 @@ class Algorithm(QObject):
                 chr(97 + toFile) + str(toRank + 1))  # chr(97) = 'a'
         return char
 
-    def prevMove(self):
-        """Sets board state to previous move."""
-        if self.currentMove.name == 'root':
-            return
-        moveString = self.currentMove.name
+    def strToMove(self, moveString):
         moveString = moveString.split()
         piece = moveString[0]
         fromFile = ord(moveString[1][0]) - 97  # chr(97) = 'a'
@@ -440,6 +436,14 @@ class Algorithm(QObject):
             captured = ' '
             toFile = ord(moveString[2][0]) - 97
             toRank = int(moveString[2][1:]) - 1
+        return piece, captured, fromFile, fromRank, toFile, toRank
+
+    def prevMove(self):
+        """Sets board state to previous move."""
+        if self.currentMove.name == 'root':
+            return
+        moveString = self.currentMove.name
+        piece, captured, fromFile, fromRank, toFile, toRank = self.strToMove(moveString)
         self.board.undoMove(fromFile, fromRank, toFile, toRank, piece, captured)
         self.currentMove = self.currentMove.parent
         self.moveNumber -= 1
@@ -470,15 +474,7 @@ class Algorithm(QObject):
         if not self.currentMove.children:
             return
         moveString = self.currentMove.children[var].name
-        moveString = moveString.split()
-        fromFile = ord(moveString[1][0]) - 97  # chr(97) = 'a'
-        fromRank = int(moveString[1][1:]) - 1
-        if len(moveString) == 4:
-            toFile = ord(moveString[3][0]) - 97
-            toRank = int(moveString[3][1:]) - 1
-        else:
-            toFile = ord(moveString[2][0]) - 97
-            toRank = int(moveString[2][1:]) - 1
+        _, _, fromFile, fromRank, toFile, toRank = self.strToMove(moveString)
         self.board.makeMove(fromFile, fromRank, toFile, toRank)
         self.currentMove = self.currentMove.children[var]
         self.moveNumber += 1
