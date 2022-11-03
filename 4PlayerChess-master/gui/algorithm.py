@@ -923,22 +923,6 @@ class Teams(Algorithm):
         super().__init__(actors)
         self.variant = 'Teams'
 
-    # def setCurrentPlayer(self, value):
-    #   super().setCurrentPlayer(value)
-    #   if value in self.aiActorPos:
-    #     for actor in self.actors:
-    #       if value == actor[0]:
-    #         fromFile, fromRank, toFile, toRank = actor[1].make_move(self.board)
-    #         self.makeMove(fromFile, fromRank, toFile, toRank)
-
-    def game_loop(self):
-      while True:
-        if self.currentPlayer in self.aiActorPos:
-          for actor in self.actors:
-            if self.currentPlayer == actor[0]:
-              fromFile, fromRank, toFile, toRank = actor[1].make_move(self.board)
-              self.makeMove(fromFile, fromRank, toFile, toRank)
-
     def makeMove(self, fromFile, fromRank, toFile, toRank):
         """Moves piece from square (fromFile, fromRank) to square (toFile, toRank), if the move is valid."""
         if self.currentPlayer == self.NoPlayer:
