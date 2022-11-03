@@ -308,8 +308,8 @@ class Board(QObject):
 
     def legalMoves(self, piece, origin, color):
         """Pseudo-legal moves for piece type."""
-        if self.kingInCheck(color):
-            return self.legalMovesInCheck(piece, origin, color)
+        # if self.kingInCheck(color):
+        #     return self.legalMovesInCheck(piece, origin, color)
 
         if color in (RED, YELLOW):
             friendly = self.pieceBB[RED] | self.pieceBB[YELLOW]
@@ -330,12 +330,12 @@ class Board(QObject):
         elif piece == QUEEN:
             return self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask
         elif piece == KING:
-            if self.kingInCheck(color):
+            kingChecked = self.kingInCheck(color)
+            if kingChecked[0]:
                 castlingMoves = 0
             else:
                 castlingMoves = self.castle[color][KINGSIDE] | self.castle[color][QUEENSIDE]
-            return (self.kingMoves(origin) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)) & \
-                   (~friendly | castlingMoves)
+            return (self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)
         else:
             return -1
 
@@ -1019,16 +1019,16 @@ class Board(QObject):
 
   # Andrew's board helper functions:
     def fileRankToIndex(self, file: int, rank: int):
-      # convert file and rank into an index usable by the boardData
-      return file + rank * self.files
+        # convert file and rank into an index usable by the boardData
+        return file + rank * self.files
 
     def indexToFileRank(self, index: int):
-      # convert index (on the boardData) to file rank
-      rank = index // self.files
-      file = index % self.files
-      return file, rank
+        # convert index (on the boardData) to file rank
+        rank = index // self.files
+        file = index % self.files
+        return file, rank
     
     def getPiece(self, boardPiece: str):
-      # get the relevant piece int given a str boardPiece
-      return self.pieceMapping[boardPiece[1]]
+        # get the relevant piece int given a str boardPiece
+        return self.pieceMapping[boardPiece[1]]
 
