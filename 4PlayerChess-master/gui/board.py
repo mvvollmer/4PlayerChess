@@ -60,6 +60,7 @@ class Board(QObject):
         self.emptyBB = 0
         self.occupiedBB = 0
         self.castle = []
+        self.enPassant = []
         self.initBoard()
         self.colorMapping = {'r': 0, 'b': 1, 'y': 2, 'g': 3}
         self.pieceMapping = {'P': 4, 'N': 5, 'B': 6, 'R': 7, 'Q': 8, 'K': 9}
@@ -308,8 +309,8 @@ class Board(QObject):
 
     def legalMoves(self, piece, origin, color):
         """Pseudo-legal moves for piece type."""
-        if self.kingInCheck(color):
-            return self.legalMovesInCheck(piece, origin, color)
+        # if self.kingInCheck(color):
+        #     return self.legalMovesInCheck(piece, origin, color)
 
         if color in (RED, YELLOW):
             friendly = self.pieceBB[RED] | self.pieceBB[YELLOW]
@@ -330,12 +331,12 @@ class Board(QObject):
         elif piece == QUEEN:
             return self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask
         elif piece == KING:
-            if self.kingInCheck(color):
+            kingChecked = self.kingInCheck(color)
+            if kingChecked[0]:
                 castlingMoves = 0
             else:
                 castlingMoves = self.castle[color][KINGSIDE] | self.castle[color][QUEENSIDE]
-            return (self.kingMoves(origin) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)) & \
-                   (~friendly | castlingMoves)
+            return (self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)
         else:
             return -1
 
@@ -441,22 +442,22 @@ class Board(QObject):
             singlePush = self.shiftN(origin) & self.emptyBB
             doublePush = self.shiftN(singlePush) & self.emptyBB & rank4
             attacks = self.shiftNW(origin) | self.shiftNE(origin)
-            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN])
+            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
         elif color == BLUE:
             singlePush = self.shiftE(origin) & self.emptyBB
             doublePush = self.shiftE(singlePush) & self.emptyBB & fileD
             attacks = self.shiftNE(origin) | self.shiftSE(origin)
-            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW])
+            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
         elif color == YELLOW:
             singlePush = self.shiftS(origin) & self.emptyBB
             doublePush = self.shiftS(singlePush) & self.emptyBB & rank11
             attacks = self.shiftSE(origin) | self.shiftSW(origin)
-            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN])
+            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
         elif color == GREEN:
             singlePush = self.shiftW(origin) & self.emptyBB
             doublePush = self.shiftW(singlePush) & self.emptyBB & fileK
             attacks = self.shiftSW(origin) | self.shiftNW(origin)
-            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW])
+            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
         else:
             return 0
         if attacksOnly:  # only return attacked squares
@@ -658,6 +659,7 @@ class Board(QObject):
                        [1 << self.square(0, 3), 1 << self.square(0, 10)],
                        [1 << self.square(10, 13), 1 << self.square(3, 13)],
                        [1 << self.square(13, 10), 1 << self.square(13, 3)]]
+        self.enPassant = [0, 0, 0, 0] # bitmaps keeping track of when players move their pawn 2 steps (for enpassant)
         self.castlingAvailability()
         self.boardReset.emit()
 
@@ -680,7 +682,23 @@ class Board(QObject):
         # If castling move, move king and rook to castling squares instead of ordinary move
         move = char + ' ' + chr(fromFile + 97) + str(fromRank + 1) + ' ' + \
                captured + ' ' + chr(toFile + 97) + str(toRank + 1)
-        if move == 'rK h1 rR k1':  # kingside castle red
+        # check for enpassant
+        if char[1] == "P" and captured == " " and abs(fromFile - toFile) == 1 and abs(fromRank - toRank) == 1:
+            color = char[0]
+            offsetFile = 0
+            offsetRank = 0
+            if color == 'r':
+              offsetRank = 1
+            if color == 'b':
+              offsetFile = 1
+            if color == 'y':
+              offsetRank = -1
+            if color == 'g':
+              offsetFile = -1
+            self.setData(toFile, toRank, char)
+            self.setData(fromFile, fromRank, ' ')
+            self.setData(fromFile + offsetFile, fromRank + offsetRank, ' ')
+        elif move == 'rK h1 rR k1':  # kingside castle red
             self.setData(fromFile + 2, fromRank, char)
             self.setData(toFile - 2, toRank, captured)
             self.setData(fromFile, fromRank, ' ')
@@ -762,6 +780,7 @@ class Board(QObject):
                 self.castle[GREEN][QUEENSIDE] = 0
         # Update bitboards
         piece, color = self.getPieceColor(char)
+        self.updateEnPassant(piece, color, fromFile, fromRank, toFile, toRank)
         fromBB = 1 << self.square(fromFile, fromRank)
         toBB = 1 << self.square(toFile, toRank)
         fromToBB = fromBB ^ toBB
@@ -1043,16 +1062,31 @@ class Board(QObject):
 
   # Andrew's board helper functions:
     def fileRankToIndex(self, file: int, rank: int):
-      # convert file and rank into an index usable by the boardData
-      return file + rank * self.files
+        # convert file and rank into an index usable by the boardData
+        return file + rank * self.files
 
     def indexToFileRank(self, index: int):
-      # convert index (on the boardData) to file rank
-      rank = index // self.files
-      file = index % self.files
-      return file, rank
+        # convert index (on the boardData) to file rank
+        rank = index // self.files
+        file = index % self.files
+        return file, rank
     
     def getPiece(self, boardPiece: str):
-      # get the relevant piece int given a str boardPiece
-      return self.pieceMapping[boardPiece[1]]
+        # get the relevant piece int given a str boardPiece
+        return self.pieceMapping[boardPiece[1]]
 
+    def updateEnPassant(self, piece, color, fromFile, fromRank, toFile, toRank):
+        self.enPassant[color] = 0 # remove any previous enPassant flags since it is a new move for this color
+        if piece == PAWN and abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2:
+            # add enpassant value
+            offsetFile = 0
+            offsetRank = 0
+            if color == RED:
+              offsetRank = -1
+            if color == BLUE:
+              offsetFile = -1
+            if color == YELLOW:
+              offsetRank = 1
+            if color == GREEN:
+              offsetFile = 1
+            self.enPassant[color] = 1 << self.square(toFile + offsetFile, toRank + offsetRank)
