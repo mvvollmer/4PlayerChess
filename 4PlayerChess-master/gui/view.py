@@ -276,8 +276,8 @@ class View(QWidget):
         # Draw arrows
         self.drawArrows(painter)
         # Draw legal moves
-        if SETTINGS.value('showlegalmoves'):
-            self.drawLegalMoves(painter)
+        # if SETTINGS.value('showlegalmoves'): # we remove this setting because preferences don't work properly
+        self.drawLegalMoves(painter)
         # Draw coordinate help
         if SETTINGS.value('coordinatehelp'):
             if self.coordinate:
@@ -675,14 +675,14 @@ class View(QWidget):
 
     def showLegalMoves(self):
         """Shows legal moves."""
-        if SETTINGS.value('showlegalmoves'):
-            fromFile = self.clickedSquare.x()
-            fromRank = self.clickedSquare.y()
-            identifier = self.board.getData(fromFile, fromRank)
-            if identifier != ' ' and identifier[0] == self.currentPlayer:
-                color = ['r', 'b', 'y', 'g'].index(identifier[0])
-                piece = ['P', 'N', 'B', 'R', 'Q', 'K'].index(identifier[1]) + 4
-                self.addLegalMoveIndicators(piece, fromFile, fromRank, color)
+        # if SETTINGS.value('showlegalmoves'):
+        fromFile = self.clickedSquare.x()
+        fromRank = self.clickedSquare.y()
+        identifier = self.board.getData(fromFile, fromRank)
+        if identifier != ' ' and identifier[0] == self.currentPlayer:
+            color = ['r', 'b', 'y', 'g'].index(identifier[0])
+            piece = ['P', 'N', 'B', 'R', 'Q', 'K'].index(identifier[1]) + 4
+            self.addLegalMoveIndicators(piece, fromFile, fromRank, color)
 
     def addLegalMoveIndicators(self, piece, fromFile, fromRank, color):
         """Adds legal move indicators."""
