@@ -548,19 +548,43 @@ class Board(QObject):
         kingSquare = self.bitScanForward(self.pieceSet(color, KING))
         return self.rayBetween(kingSquare, square) | self.rayBeyond(kingSquare, square)
 
-    def attackers(self, square):
-         """Returns the set of all pieces attacking and defending the target square."""
-         attackers = self.pawnMoves(square, RED, True) & self.pieceSet(YELLOW, PAWN)
-         attackers |= self.pawnMoves(square, YELLOW, True) & self.pieceSet(RED, PAWN)
-         attackers |= self.pawnMoves(square, BLUE, True) & self.pieceSet(GREEN, PAWN)
-         attackers |= self.pawnMoves(square, GREEN, True) & self.pieceSet(BLUE, PAWN)
-         attackers |= self.knightMoves(square) & self.pieceBB[KNIGHT]
-         attackers |= self.kingMoves(square) & self.pieceBB[KING]
-         bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
-         attackers |= bishopMoves & (self.pieceBB[BISHOP] | self.pieceBB[QUEEN])
-         rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
-         attackers |= rookMoves & (self.pieceBB[ROOK] | self.pieceBB[QUEEN])
-         return attackers
+    def attackers(self, square, color):
+        attackers = []
+        if self.attacked(square, color):
+           if color in (RED, YELLOW) :
+                opposite = (BLUE, GREEN)
+                for col in opposite:
+                    if self.pawnMoves(square, col, True):
+                        for piece in self.pieceSet(col, PAWN):
+                            #if pawn is attacking
+                            attackers.append(piece)
+                    rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
+                    if rookMoves & self.pieceSet(col, ROOK):
+                        for piece in self.pieceSet(col, ROOK):
+                            # if rook is attacking
+                            attackers.append(piece)
+
+
+                    if self.knightMoves(square) & self.pieceSet(col, KNIGHT):
+                        for piece in self.pieceSet(col, KNIGHT):
+                            # if knight is attacking
+                            attackers.append(piece)
+
+                    bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
+                    if bishopMoves & (self.pieceSet(col, BISHOP)):
+                        for piece in self.pieceSet(col, BISHOP):
+                            # if Bishop is attacking
+                            attackers.append(piece)
+
+                    queenMoves= self.maskBlockedSquares(self.bishopMoves(square), square)
+                    if queenMoves & (self.pieceSet(col, QUEEN)):
+                        for piece in self.pieceSet(col, QUEEN):
+                            # if Queen is attacking
+                            attackers.append(piece)
+        return attackers
+
+
+
 
     def attacked(self, square, color):
         """Checks if a square is attacked by a player."""
