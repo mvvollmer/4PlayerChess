@@ -33,9 +33,11 @@ notLeftFile = 0xfffefffefffefffefffefffefffefffefffefffefffefffefffefffefffefffe
 notRightFile = 0x7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff7fff
 notTopRank = 0x0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-boardMask = 0xff00ff00ff07ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe0ff00ff00ff00000  # without 3x3 corners
+# without 3x3 corners
+boardMask = 0xff00ff00ff07ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe0ff00ff00ff00000
 boardEdgeMask = 0xff008100810781e400240024002400240024002781e081008100ff00000
-squareBoardMask = 0x7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe0000  # full 14x14 board
+# full 14x14 board
+squareBoardMask = 0x7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe7ffe0000
 squareBoardEdgeMask = 0x7ffe4002400240024002400240024002400240024002400240027ffe0000
 
 # 256-bit De Bruijn sequence and corresponding index lookup
@@ -235,7 +237,7 @@ class Board(QObject):
 
     def rayBeyond(self, origin, square):
         """Returns part of ray from origin beyond blocker square."""
-        sign = lambda x: (1, -1)[x < 0]
+        def sign(x): return (1, -1)[x < 0]
         diff = square - origin
         s = sign(diff)
         direction = max([d if not diff % d else 1 for d in (15, 16, 17)])
@@ -254,7 +256,7 @@ class Board(QObject):
 
     def rayBetween(self, origin, square):
         """Returns part of ray from origin to square."""
-        sign = lambda x: (1, -1)[x < 0]
+        def sign(x): return (1, -1)[x < 0]
         diff = square - origin
         s = sign(diff)
         direction = max([d if not diff % d else 1 for d in (15, 16, 17)])
@@ -267,7 +269,8 @@ class Board(QObject):
                    (self.rankMask(origin) & (posOrigin if s > 0 else negOrigin))
         elif direction == 15:
             return (self.antiDiagonalMask(square) & (negSquare if s > 0 else posSquare)) & \
-                   (self.antiDiagonalMask(origin) & (posOrigin if s > 0 else negOrigin))
+                   (self.antiDiagonalMask(origin) &
+                    (posOrigin if s > 0 else negOrigin))
         elif direction == 16:
             return (self.fileMask(square) & (negSquare if s > 0 else posSquare)) & \
                    (self.fileMask(origin) & (posOrigin if s > 0 else negOrigin))
@@ -374,7 +377,6 @@ class Board(QObject):
                     moves.append(move)
             return moves
 
-
         elif piece == KNIGHT:
             moves = []
             for move in self.knightMoves(origin) & ~friendly & pinMask:
@@ -430,7 +432,6 @@ class Board(QObject):
                     moves.append(move)
             return moves
 
-
     def pawnMoves(self, origin, color, attacksOnly=False):
         """Pseudo-legal pawn moves."""
         rank4 = 0x00000000000000000000000000000000000000000000ffff0000000000000000
@@ -442,22 +443,26 @@ class Board(QObject):
             singlePush = self.shiftN(origin) & self.emptyBB
             doublePush = self.shiftN(singlePush) & self.emptyBB & rank4
             attacks = self.shiftNW(origin) | self.shiftNE(origin)
-            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
+            captures = attacks & (
+                self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
         elif color == BLUE:
             singlePush = self.shiftE(origin) & self.emptyBB
             doublePush = self.shiftE(singlePush) & self.emptyBB & fileD
             attacks = self.shiftNE(origin) | self.shiftSE(origin)
-            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
+            captures = attacks & (
+                self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
         elif color == YELLOW:
             singlePush = self.shiftS(origin) & self.emptyBB
             doublePush = self.shiftS(singlePush) & self.emptyBB & rank11
             attacks = self.shiftSE(origin) | self.shiftSW(origin)
-            captures = attacks & (self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
+            captures = attacks & (
+                self.pieceBB[BLUE] | self.pieceBB[GREEN] | self.enPassant[BLUE] | self.enPassant[GREEN])
         elif color == GREEN:
             singlePush = self.shiftW(origin) & self.emptyBB
             doublePush = self.shiftW(singlePush) & self.emptyBB & fileK
             attacks = self.shiftSW(origin) | self.shiftNW(origin)
-            captures = attacks & (self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
+            captures = attacks & (
+                self.pieceBB[RED] | self.pieceBB[YELLOW] | self.enPassant[RED] | self.enPassant[YELLOW])
         else:
             return 0
         if attacksOnly:  # only return attacked squares
@@ -517,14 +522,14 @@ class Board(QObject):
         kingSquare = self.bitScanForward(self.pieceSet(color, KING))
         if color in (RED, YELLOW):
             opponentRQ = self.pieceSet(BLUE, ROOK) | self.pieceSet(BLUE, QUEEN) | \
-                         self.pieceSet(GREEN, ROOK) | self.pieceSet(GREEN, QUEEN)
+                self.pieceSet(GREEN, ROOK) | self.pieceSet(GREEN, QUEEN)
             opponentBQ = self.pieceSet(BLUE, BISHOP) | self.pieceSet(BLUE, QUEEN) | \
-                         self.pieceSet(GREEN, BISHOP) | self.pieceSet(GREEN, QUEEN)
+                self.pieceSet(GREEN, BISHOP) | self.pieceSet(GREEN, QUEEN)
         else:
             opponentRQ = self.pieceSet(RED, ROOK) | self.pieceSet(RED, QUEEN) | \
-                         self.pieceSet(YELLOW, ROOK) | self.pieceSet(YELLOW, QUEEN)
+                self.pieceSet(YELLOW, ROOK) | self.pieceSet(YELLOW, QUEEN)
             opponentBQ = self.pieceSet(RED, BISHOP) | self.pieceSet(RED, QUEEN) | \
-                         self.pieceSet(YELLOW, BISHOP) | self.pieceSet(YELLOW, QUEEN)
+                self.pieceSet(YELLOW, BISHOP) | self.pieceSet(YELLOW, QUEEN)
         pinner = self.xrayRookAttacks(ownPieces, kingSquare) & opponentRQ
         while pinner:
             square = self.bitScanForward(pinner)
@@ -551,40 +556,39 @@ class Board(QObject):
     def attackers(self, square, color):
         attackers = []
         if self.attacked(square, color):
-           if color in (RED, YELLOW) :
+            if color in (RED, YELLOW):
                 opposite = (BLUE, GREEN)
                 for col in opposite:
                     if self.pawnMoves(square, col, True):
                         for piece in self.pieceSet(col, PAWN):
-                            #if pawn is attacking
+                            # if pawn is attacking
                             attackers.append(piece)
-                    rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
+                    rookMoves = self.maskBlockedSquares(
+                        self.rookMoves(square), square)
                     if rookMoves & self.pieceSet(col, ROOK):
                         for piece in self.pieceSet(col, ROOK):
                             # if rook is attacking
                             attackers.append(piece)
-
 
                     if self.knightMoves(square) & self.pieceSet(col, KNIGHT):
                         for piece in self.pieceSet(col, KNIGHT):
                             # if knight is attacking
                             attackers.append(piece)
 
-                    bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
+                    bishopMoves = self.maskBlockedSquares(
+                        self.bishopMoves(square), square)
                     if bishopMoves & (self.pieceSet(col, BISHOP)):
                         for piece in self.pieceSet(col, BISHOP):
                             # if Bishop is attacking
                             attackers.append(piece)
 
-                    queenMoves= self.maskBlockedSquares(self.bishopMoves(square), square)
+                    queenMoves = self.maskBlockedSquares(
+                        self.bishopMoves(square), square)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         for piece in self.pieceSet(col, QUEEN):
                             # if Queen is attacking
                             attackers.append(piece)
         return attackers
-
-
-
 
     def attacked(self, square, color):
         """Checks if a square is attacked by a player."""
@@ -627,7 +631,8 @@ class Board(QObject):
             for file in range(14):
                 if not ((file < 3 and rank < 3) or (file < 3 and rank > 10) or
                         (file > 10 and rank < 3) or (file > 10 and rank > 10)):
-                    bitstring += '1 ' if (bitboard & (1 << self.square(file, rank))) else '. '
+                    bitstring += '1 ' if (bitboard & (1 <<
+                                          self.square(file, rank))) else '. '
                 else:
                     bitstring += '  '
             bitstring += '\n'
@@ -638,7 +643,8 @@ class Board(QObject):
         bitstring = ''
         for rank in reversed(range(16)):
             for file in range(16):
-                bitstring += '1 ' if (bitboard & (1 << self.square256(file, rank))) else '. '
+                bitstring += '1 ' if (bitboard & (1 <<
+                                      self.square256(file, rank))) else '. '
             bitstring += '\n'
         print(bitstring)
 
@@ -659,7 +665,8 @@ class Board(QObject):
                        [1 << self.square(0, 3), 1 << self.square(0, 10)],
                        [1 << self.square(10, 13), 1 << self.square(3, 13)],
                        [1 << self.square(13, 10), 1 << self.square(13, 3)]]
-        self.enPassant = [0, 0, 0, 0] # bitmaps keeping track of when players move their pawn 2 steps (for enpassant)
+        # bitmaps keeping track of when players move their pawn 2 steps (for enpassant)
+        self.enPassant = [0, 0, 0, 0]
         self.castlingAvailability()
         self.boardReset.emit()
 
@@ -681,20 +688,20 @@ class Board(QObject):
         captured = self.getData(toFile, toRank)
         # If castling move, move king and rook to castling squares instead of ordinary move
         move = char + ' ' + chr(fromFile + 97) + str(fromRank + 1) + ' ' + \
-               captured + ' ' + chr(toFile + 97) + str(toRank + 1)
+            captured + ' ' + chr(toFile + 97) + str(toRank + 1)
         # check for enpassant
         if char[1] == "P" and captured == " " and abs(fromFile - toFile) == 1 and abs(fromRank - toRank) == 1:
             color = char[0]
             offsetFile = 0
             offsetRank = 0
             if color == 'r':
-              offsetRank = 1
+                offsetRank = 1
             if color == 'b':
-              offsetFile = 1
+                offsetFile = 1
             if color == 'y':
-              offsetRank = -1
+                offsetRank = -1
             if color == 'g':
-              offsetFile = -1
+                offsetFile = -1
             self.setData(toFile, toRank, char)
             self.setData(fromFile, fromRank, ' ')
             self.setData(fromFile + offsetFile, fromRank + offsetRank, ' ')
@@ -784,6 +791,34 @@ class Board(QObject):
         fromBB = 1 << self.square(fromFile, fromRank)
         toBB = 1 << self.square(toFile, toRank)
         fromToBB = fromBB ^ toBB
+
+        # Update Pawn Promotion
+        # red pawn promotion
+        redPawnPromotion = (toFile, toRank) == (3, 10) or (
+            toFile, toRank) == (4, 10) or (toFile, toRank) == (5, 10) or (toFile, toRank) == (6, 10) or (toFile, toRank) == (7, 10) or (toFile, toRank) == (8, 10) or (toFile, toRank) == (9, 10) or (toFile, toRank) == (10, 10)
+        if char == 'rP' and redPawnPromotion:
+            # option = input("Make you choice: Q, R, K, B")
+            self.setData(fromFile, fromRank, ' ')
+            self.setData(toFile, toRank, 'rQ')
+        # blue pawn promotion
+        bluePawnPromotion = (toFile, toRank) == (10, 10) or (
+            toFile, toRank) == (10, 9) or (toFile, toRank) == (10, 8) or (toFile, toRank) == (10, 7) or (toFile, toRank) == (10, 6) or (toFile, toRank) == (10, 5) or (toFile, toRank) == (10, 4) or (toFile, toRank) == (10, 3)
+        if char == 'bP' and bluePawnPromotion:
+            self.setData(fromFile, fromRank, ' ')
+            self.setData(toFile, toRank, 'bQ')
+        # yellow pawn promotion
+        yellowPawnPromotion = (toFile, toRank) == (3, 3) or (toFile, toRank) == (4, 3) or (toFile, toRank) == (5, 3) or (toFile, toRank) == (
+            6, 3) or (toFile, toRank) == (7, 3) or (toFile, toRank) == (8, 3) or (toFile, toRank) == (9, 3) or (toFile, toRank) == (10, 3)
+        if char == 'yP' and yellowPawnPromotion:
+            self.setData(fromFile, fromRank, ' ')
+            self.setData(toFile, toRank, 'yQ')
+        # green pawn promotion
+        greenPawnPromotion = (toFile, toRank) == (3, 10) or (toFile, toRank) == (3, 9) or (toFile, toRank) == (3, 8) or (toFile, toRank) == (
+            3, 7) or (toFile, toRank) == (3, 6) or (toFile, toRank) == (3, 5) or (toFile, toRank) == (3, 4) or (toFile, toRank) == (3, 3)
+        if char == 'gP' and greenPawnPromotion:
+            self.setData(fromFile, fromRank, ' ')
+            self.setData(toFile, toRank, 'gQ')
+
         # Move piece
         self.pieceBB[color] ^= fromToBB
         self.pieceBB[piece] ^= fromToBB
@@ -856,7 +891,7 @@ class Board(QObject):
         """Takes back move and restores captured piece."""
         # Remove king and rook from castling squares
         move = char + ' ' + chr(fromFile + 97) + str(fromRank + 1) + ' ' + \
-               captured + ' ' + chr(toFile + 97) + str(toRank + 1)
+            captured + ' ' + chr(toFile + 97) + str(toRank + 1)
         if move == 'rK h1 rR k1':  # kingside castle red
             self.setData(fromFile + 2, fromRank, ' ')
             self.setData(toFile - 2, toRank, ' ')
@@ -906,7 +941,8 @@ class Board(QObject):
             piece_, color_ = self.getPieceColor(captured)
             if piece == KING and piece_ == ROOK and color == color_:
                 # Remove king and rook from castling squares
-                castlingSquares = self.rayBetween(self.square(fromFile, fromRank), self.square(toFile, toRank))
+                castlingSquares = self.rayBetween(self.square(
+                    fromFile, fromRank), self.square(toFile, toRank))
                 self.pieceBB[color] &= ~castlingSquares
                 self.pieceBB[piece_] &= ~castlingSquares
                 self.pieceBB[piece] &= ~castlingSquares
@@ -1070,23 +1106,25 @@ class Board(QObject):
         rank = index // self.files
         file = index % self.files
         return file, rank
-    
+
     def getPiece(self, boardPiece: str):
         # get the relevant piece int given a str boardPiece
         return self.pieceMapping[boardPiece[1]]
 
     def updateEnPassant(self, piece, color, fromFile, fromRank, toFile, toRank):
-        self.enPassant[color] = 0 # remove any previous enPassant flags since it is a new move for this color
+        # remove any previous enPassant flags since it is a new move for this color
+        self.enPassant[color] = 0
         if piece == PAWN and abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2:
             # add enpassant value
             offsetFile = 0
             offsetRank = 0
             if color == RED:
-              offsetRank = -1
+                offsetRank = -1
             if color == BLUE:
-              offsetFile = -1
+                offsetFile = -1
             if color == YELLOW:
-              offsetRank = 1
+                offsetRank = 1
             if color == GREEN:
-              offsetFile = 1
-            self.enPassant[color] = 1 << self.square(toFile + offsetFile, toRank + offsetRank)
+                offsetFile = 1
+            self.enPassant[color] = 1 << self.square(
+                toFile + offsetFile, toRank + offsetRank)
