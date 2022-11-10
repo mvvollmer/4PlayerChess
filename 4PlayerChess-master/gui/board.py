@@ -298,11 +298,14 @@ class Board(QObject):
             castlingMoves &= castlingMoves - 1
         return moves
 
-    def checkMate(self, pieces, origin, color):
+    def checkMate(self, color):
+        pieceTypes = [PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING]
         totMoves = 0
         if self.kingInCheck(color)[0]:
-            for piece in pieces:
-                totMoves + len(self.legalMoves(piece, origin, color))
+            for ptype in pieceTypes:
+                for pieceFR in self.getSquares(self.pieceSet(color, ptype)):
+                    piece = self.square(pieceFR[0], pieceFR[1])
+                    totMoves + len(self.getSquares(self.legalMoves(ptype, piece, color)))
             return totMoves == 0
         else:
             return False
@@ -329,7 +332,6 @@ class Board(QObject):
         elif piece == ROOK:
             return self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask
         elif piece == QUEEN:
-            print(self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask)
             return self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask
         elif piece == KING:
             kingChecked = self.kingInCheck(color)
@@ -337,7 +339,17 @@ class Board(QObject):
                 castlingMoves = 0
             else:
                 castlingMoves = self.castle[color][KINGSIDE] | self.castle[color][QUEENSIDE]
-            return (self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)
+                moves = 0
+                for move in self.getSquares((self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)):
+                    if color in (RED, YELLOW):
+                        if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(
+                                self.square(move[0], move[1]), GREEN):
+                            moves = moves | (1 << self.square(move[0], move[1]))
+                    else:
+                        if not self.attacked(self.square(move[0], move[1]), RED) and not self.attacked(
+                                self.square(move[0], move[1]), YELLOW):
+                            moves = moves | (1 << self.square(move[0], move[1]))
+            return moves
         else:
             return -1
 
@@ -351,9 +363,8 @@ class Board(QObject):
         attackRays = []
 
         for att in attackersList:
-            print(att)
-            print(self.square(att[0], att[1]))
             attackerSquares.append(self.square(att[0], att[1]))
+
 
 
         if color in (RED, YELLOW):
@@ -370,82 +381,78 @@ class Board(QObject):
             attackRays.append(self.kingRay(attack, color))
             attackedSquares.append(self.getSquares(self.kingRay(attack, color)))
 
-        print(attackedSquares)
+
 
         if piece == PAWN:
-            moves = []
+            moves = 0
             for move in self.getSquares(self.pawnMoves(origin, color) & ~friendly & pinMask):
                 attacks = len(attackedSquares)
                 blocks = 0
                 for atPath in attackedSquares:
-                    if move in atPath:
+                    if move in atPath or move in attackersList:
                         blocks = blocks + 1
-                    if blocks == attacks:
-                        moves.append(self.square(move[0], move[1]))
-
-            print(moves)
-            print(self.bitScanForward(moves[0]))
-            print(self.printBB(self.square(move[0], move[1])))
-            return self.bitScanForward(moves[0])
+                        if blocks == attacks:
+                            moves = moves | (1 << self.square(move[0], move[1]))
+            return moves
 
 
         elif piece == KNIGHT:
-            moves = []
-            for move in self.knightMoves(origin) & ~friendly & pinMask:
-                attacks = len(attackRays)
+            moves = 0
+            for move in self.getSquares(self.knightMoves(origin) & ~friendly & pinMask):
+                attacks = len(attackedSquares)
                 blocks = 0
-                for ray in attackRays:
-                    if move in ray:
+                for atPath in attackedSquares:
+                    if move in atPath or move in attackersList:
                         blocks = blocks + 1
-                if blocks == attacks:
-                    moves.append(move)
+                        if blocks == attacks:
+                            moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == BISHOP:
-            moves = []
-            for move in self.maskBlockedSquares(self.bishopMoves(origin), origin) & ~friendly & pinMask:
-                attacks = len(attackRays)
+            moves = 0
+            for move in self.getSquares(self.maskBlockedSquares(self.bishopMoves(origin), origin) & ~friendly & pinMask):
+                attacks = len(attackedSquares)
                 blocks = 0
-                for ray in attackRays:
-                    if move in ray:
+                for atPath in attackedSquares:
+                    if move in atPath or move in attackersList:
                         blocks = blocks + 1
-                if blocks == attacks:
-                    moves.append(move)
+                        if blocks == attacks:
+                            moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == ROOK:
-            moves = []
-            for move in self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask:
-                attacks = len(attackRays)
+            moves = 0
+            for move in self.getSquares(self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask):
+                attacks = len(attackedSquares)
                 blocks = 0
-                for ray in attackRays:
-                    if move in ray:
+                for atPath in attackedSquares:
+                    if move in atPath or move in attackersList:
                         blocks = blocks + 1
-                if blocks == attacks:
-                    moves.append(move)
+                        if blocks == attacks:
+                            moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == QUEEN:
-            moves = []
-            for move in self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask:
-                attacks = len(attackRays)
+            moves = 0
+            for move in self.getSquares(self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask):
+                attacks = len(attackedSquares)
                 blocks = 0
-                for ray in attackRays:
-                    if move in ray:
+                for atPath in attackedSquares:
+                    if move in atPath or move in attackersList:
                         blocks = blocks + 1
-                if blocks == attacks:
-                    moves.append(move)
+                        if blocks == attacks:
+                            moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == KING:
-            moves = []
-            print(self.getSquares(self.kingMoves(origin)))
-            print(self.getSquares(self.maskBlockedSquares(self.kingMoves(origin), origin) & ~friendly & pinMask))
+            moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.kingMoves(origin), origin) & ~friendly & pinMask):
-                if not self.attacked(self.square(move[0], move[1]), color):
-                    moves.append(self.square(move[0], move[1]))
-                print(move)
-            print(moves)
+                if color in (RED, YELLOW):
+                    if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(self.square(move[0], move[1]), GREEN):
+                        moves = moves | (1 << self.square(move[0], move[1]))
+                else:
+                    if not self.attacked(self.square(move[0], move[1]), RED) and not self.attacked(self.square(move[0], move[1]), YELLOW):
+                        moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
 
@@ -506,7 +513,6 @@ class Board(QObject):
 
     def queenMoves(self, origin):
         """Pseudo-legal queen moves (= union of bishop and rook)."""
-        print(self.bishopMoves(origin) | self.rookMoves(origin))
         return (self.bishopMoves(origin) | self.rookMoves(origin)) & boardMask
 
     def kingMoves(self, origin):
