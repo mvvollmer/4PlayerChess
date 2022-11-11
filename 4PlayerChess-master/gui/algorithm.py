@@ -48,7 +48,8 @@ class Algorithm(QObject):
     playerRatingChanged = pyqtSignal(str, str, str, str)
     cannotReadPgn4 = pyqtSignal()
 
-    NoResult, Team1Wins, Team2Wins, Draw = ['*', '1-0', '0-1', '1/2-1/2']  # Results
+    NoResult, Team1Wins, Team2Wins, Draw = [
+        '*', '1-0', '0-1', '1/2-1/2']  # Results
     NoPlayer, Red, Blue, Yellow, Green = ['?', 'r', 'b', 'y', 'g']  # Players
     playerQueue = deque([Red, Blue, Yellow, Green])
 
@@ -67,6 +68,7 @@ class Algorithm(QObject):
         self.board = Board(14, 14)
         self.result = self.NoResult
         self.currentPlayer = self.NoPlayer
+        self.promoteSpace = None
         self.moveNumber = 0
         self.currentMove = self.Node('root', [], None)
         self.currentMove.fen4 = self.startFen4
@@ -89,6 +91,7 @@ class Algorithm(QObject):
 
     class Node:
         """Generic node class. Basic element of a tree."""
+
         def __init__(self, name, children, parent):
             self.name = name
             self.children = children
@@ -142,9 +145,12 @@ class Algorithm(QObject):
     def updatePlayerNames(self, red, blue, yellow, green):
         """Sets player names to names entered in the player name labels."""
         self.redName = red if not (red == 'Player Name' or red == '') else '?'
-        self.blueName = blue if not (blue == 'Player Name' or blue == '') else '?'
-        self.yellowName = yellow if not (yellow == 'Player Name' or yellow == '') else '?'
-        self.greenName = green if not (green == 'Player Name' or green == '') else '?'
+        self.blueName = blue if not (
+            blue == 'Player Name' or blue == '') else '?'
+        self.yellowName = yellow if not (
+            yellow == 'Player Name' or yellow == '') else '?'
+        self.greenName = green if not (
+            green == 'Player Name' or green == '') else '?'
         self.getPgn4()  # Update PGN4
 
     def updatePlayerRating(self, red, blue, yellow, green):
@@ -170,12 +176,10 @@ class Algorithm(QObject):
         if self.currentPlayer == value:
             return
         self.currentPlayer = value
-        self.setPlayerQueue(self.currentPlayer)
+        # self.setPlayerQueue(self.currentPlayer)
         self.currentPlayerChanged.emit(self.currentPlayer)
         if self.board.checkMate(self.board.colorMapping[self.playerQueue[0]]):
             self.currentPlayer = self.NoPlayer
-            print('gameover')
-
 
     def setPlayerQueue(self, currentPlayer):
         """Rotates player queue such that the current player is the first in the queue."""
@@ -210,11 +214,12 @@ class Algorithm(QObject):
         fen4 += self.board.castlingAvailability() + ' '
         fen4 += '- '  # En passant target square, n/a
         fen4 += str(self.moveNumber) + ' '  # Number of quarter-moves
-        fen4 += str(self.moveNumber // 4 + 1)  # Number of full moves, starting from 1
+        # Number of full moves, starting from 1
+        fen4 += str(self.moveNumber // 4 + 1)
         if SETTINGS.value('chesscom'):
             chesscomPrefix = self.currentPlayer.upper() + '-0,0,0,0' + \
-                             self.toChesscomCastling(self.board.castlingAvailability()) + '-0,0,0,0-' + \
-                             str(self.moveNumber) + '-'
+                self.toChesscomCastling(self.board.castlingAvailability()) + '-0,0,0,0-' + \
+                str(self.moveNumber) + '-'
             fen4 = chesscomPrefix + self.board.getChesscomFen4()
         if emitSignal:
             self.fen4Generated.emit(fen4)
@@ -239,14 +244,22 @@ class Algorithm(QObject):
         castling = fen4.split(' ')[2]
         RED, BLUE, YELLOW, GREEN = range(4)
         QUEENSIDE, KINGSIDE = (0, 1)
-        self.board.castle[RED][KINGSIDE] = (1 << self.square(10, 0)) if 'rK' in castling else 0
-        self.board.castle[RED][QUEENSIDE] = (1 << self.square(3, 0)) if 'rQ' in castling else 0
-        self.board.castle[BLUE][KINGSIDE] = (1 << self.square(0, 10)) if 'bK' in castling else 0
-        self.board.castle[BLUE][QUEENSIDE] = (1 << self.square(0, 3)) if 'bQ' in castling else 0
-        self.board.castle[YELLOW][KINGSIDE] = (1 << self.square(3, 13)) if 'yK' in castling else 0
-        self.board.castle[YELLOW][QUEENSIDE] = (1 << self.square(10, 13)) if 'yQ' in castling else 0
-        self.board.castle[GREEN][KINGSIDE] = (1 << self.square(13, 3)) if 'gK' in castling else 0
-        self.board.castle[GREEN][QUEENSIDE] = (1 << self.square(13, 10)) if 'gQ' in castling else 0
+        self.board.castle[RED][KINGSIDE] = (
+            1 << self.square(10, 0)) if 'rK' in castling else 0
+        self.board.castle[RED][QUEENSIDE] = (
+            1 << self.square(3, 0)) if 'rQ' in castling else 0
+        self.board.castle[BLUE][KINGSIDE] = (
+            1 << self.square(0, 10)) if 'bK' in castling else 0
+        self.board.castle[BLUE][QUEENSIDE] = (
+            1 << self.square(0, 3)) if 'bQ' in castling else 0
+        self.board.castle[YELLOW][KINGSIDE] = (
+            1 << self.square(3, 13)) if 'yK' in castling else 0
+        self.board.castle[YELLOW][QUEENSIDE] = (
+            1 << self.square(10, 13)) if 'yQ' in castling else 0
+        self.board.castle[GREEN][KINGSIDE] = (
+            1 << self.square(13, 3)) if 'gK' in castling else 0
+        self.board.castle[GREEN][QUEENSIDE] = (
+            1 << self.square(13, 10)) if 'gQ' in castling else 0
 
     def setBoardState(self, fen4):
         """Sets board according to FEN4."""
@@ -259,10 +272,12 @@ class Algorithm(QObject):
         self.setResult(self.NoResult)
         if SETTINGS.value('chesscom'):
             self.setCurrentPlayer(fen4[0].lower())
+            self.setPlayerQueue(self.currentPlayer)
             self.moveNumber = 0
             self.fenMoveNumber = 1
         else:
             self.setCurrentPlayer(fen4.split(' ')[1])
+            self.setPlayerQueue(self.currentPlayer)
             self.moveNumber = int(fen4.split(' ')[-2])
             self.fenMoveNumber = int(fen4.split(' ')[-2]) + 1
         self.currentMove = self.Node('root', [], None)
@@ -287,8 +302,10 @@ class Algorithm(QObject):
                 moveString.insert(1, '-')
         elif len(moveString) == 4:
             # Castling move
-            shortCastle = ['rK h1 rR k1', 'bK a8 bR a11', 'yK g14 yR d14', 'gK n7 gR n4']
-            longCastle = ['rK h1 rR d1', 'bK a8 bR a4', 'yK g14 yR k14', 'gK n7 gR n11']
+            shortCastle = ['rK h1 rR k1', 'bK a8 bR a11',
+                           'yK g14 yR d14', 'gK n7 gR n4']
+            longCastle = ['rK h1 rR d1', 'bK a8 bR a4',
+                          'yK g14 yR k14', 'gK n7 gR n11']
             if ' '.join(moveString) in shortCastle:
                 moveString = 'O-O'
             elif ' '.join(moveString) in longCastle:
@@ -362,8 +379,10 @@ class Algorithm(QObject):
                 moveString[1] = 'x'
         elif len(moveString) == 4:
             # Castling move
-            shortCastle = ['rK h1 rR k1', 'bK a8 bR a11', 'yK g14 yR d14', 'gK n7 gR n4']
-            longCastle = ['rK h1 rR d1', 'bK a8 bR a4', 'yK g14 yR k14', 'gK n7 gR n11']
+            shortCastle = ['rK h1 rR k1', 'bK a8 bR a11',
+                           'yK g14 yR d14', 'gK n7 gR n4']
+            longCastle = ['rK h1 rR d1', 'bK a8 bR a4',
+                          'yK g14 yR k14', 'gK n7 gR n11']
             if ' '.join(moveString) in shortCastle:
                 moveString = 'O-O'
             elif ' '.join(moveString) in longCastle:
@@ -447,8 +466,10 @@ class Algorithm(QObject):
         if self.currentMove.name == 'root':
             return
         moveString = self.currentMove.name
-        piece, captured, fromFile, fromRank, toFile, toRank = self.strToMove(moveString)
-        self.board.undoMove(fromFile, fromRank, toFile, toRank, piece, captured)
+        piece, captured, fromFile, fromRank, toFile, toRank = self.strToMove(
+            moveString)
+        self.board.undoMove(fromFile, fromRank, toFile,
+                            toRank, piece, captured)
         self.currentMove = self.currentMove.parent
         self.moveNumber -= 1
         self.playerQueue.rotate(1)
@@ -526,6 +547,16 @@ class Algorithm(QObject):
     def makeMove(self, fromFile, fromRank, toFile, toRank):
         """This method must be implemented to define the proper logic corresponding to the game type (Teams or FFA)."""
         return False
+    
+    def promoteValue(self, piece):
+        color = self.playerQueue[3]
+        charPiece = f'{color}{piece}'
+        piece, color = self.board.getPieceColor(charPiece)
+        if not self.board.checkMate(color) and self.promoteSpace is not None:
+            self.board.setData(self.promoteSpace[0], self.promoteSpace[1], charPiece)
+            self.promoteSpace = None
+            self.setCurrentPlayer(self.playerQueue[0])
+                # Update FEN4 and PGN4
 
     def getPgn4(self):
         """Generates PGN4 from current game."""
@@ -534,21 +565,32 @@ class Algorithm(QObject):
         # Tags: "?" if data unknown, "-" if not applicable
         pgn4 += '[Variant "' + self.variant + '"]\n'
         pgn4 += '[Site "www.chess.com/4-player-chess"]\n'
-        pgn4 += '[Date "' + datetime.utcnow().strftime('%a %b %d %Y %H:%M:%S (UTC)') + '"]\n'
+        pgn4 += '[Date "' + \
+            datetime.utcnow().strftime('%a %b %d %Y %H:%M:%S (UTC)') + '"]\n'
         # pgn4 += '[Event "-"]\n'
         # pgn4 += '[Round "-"]\n'
-        pgn4 += '[Red "' + self.redName + '"]\n' if not self.redName == '?' else ''
-        pgn4 += '[RedElo "' + self.redRating + '"]\n' if not self.redRating == '?' else ''
-        pgn4 += '[Blue "' + self.blueName + '"]\n' if not self.blueName == '?' else ''
-        pgn4 += '[BlueElo "' + self.blueRating + '"]\n' if not self.blueRating == '?' else ''
-        pgn4 += '[Yellow "' + self.yellowName + '"]\n' if not self.yellowName == '?' else ''
-        pgn4 += '[YellowElo "' + self.yellowRating + '"]\n' if not self.yellowRating == '?' else ''
-        pgn4 += '[Green "' + self.greenName + '"]\n' if not self.greenName == '?' else ''
-        pgn4 += '[GreenElo "' + self.greenRating + '"]\n' if not self.greenRating == '?' else ''
+        pgn4 += '[Red "' + self.redName + \
+            '"]\n' if not self.redName == '?' else ''
+        pgn4 += '[RedElo "' + self.redRating + \
+            '"]\n' if not self.redRating == '?' else ''
+        pgn4 += '[Blue "' + self.blueName + \
+            '"]\n' if not self.blueName == '?' else ''
+        pgn4 += '[BlueElo "' + self.blueRating + \
+            '"]\n' if not self.blueRating == '?' else ''
+        pgn4 += '[Yellow "' + self.yellowName + \
+            '"]\n' if not self.yellowName == '?' else ''
+        pgn4 += '[YellowElo "' + self.yellowRating + \
+            '"]\n' if not self.yellowRating == '?' else ''
+        pgn4 += '[Green "' + self.greenName + \
+            '"]\n' if not self.greenName == '?' else ''
+        pgn4 += '[GreenElo "' + self.greenRating + \
+            '"]\n' if not self.greenRating == '?' else ''
         # pgn4 += '[Result "' + self.result + '"]\n'  # 1-0 (r & y win), 0-1 (b & g win), 1/2-1/2 (draw), * (no result)
         # pgn4 += '[Mode "ICS"]\n'  # ICS = Internet Chess Server, OTB = Over-The-Board
-        pgn4 += '[TimeControl "G/1 d15"]\n'  # 1-minute game with 15 seconds delay per move
-        pgn4 += '[PlyCount "' + str(self.moveNumber) + '"]\n'  # Total number of quarter-moves
+        # 1-minute game with 15 seconds delay per move
+        pgn4 += '[TimeControl "G/1 d15"]\n'
+        # Total number of quarter-moves
+        pgn4 += '[PlyCount "' + str(self.moveNumber) + '"]\n'
         startFen4 = self.currentMove.getRoot().fen4
         if SETTINGS.value('chesscom'):
             if startFen4 != self.chesscomStartFen4:
@@ -580,7 +622,8 @@ class Algorithm(QObject):
         self.moveDict.clear()
         self.index = 0
         self.getMoveText(self.currentMove.getRoot(), self.fenMoveNumber)
-        self.inverseMoveDict = {value: key for key, value in self.moveDict.items()}
+        self.inverseMoveDict = {value: key for key,
+                                value in self.moveDict.items()}
         self.moveTextChanged.emit(self.moveText)
         if self.currentMove.name != 'root':
             key = self.inverseMoveDict[self.currentMove]
@@ -700,7 +743,8 @@ class Algorithm(QObject):
 
     def split_(self, movetext):
         """Splits movetext into tokens."""
-        x = split('\s+(?={)|(?<=})\s+', movetext)  # regex: one or more spaces followed by { or preceded by }
+        x = split('\s+(?={)|(?<=})\s+',
+                  movetext)  # regex: one or more spaces followed by { or preceded by }
         movetext = []
         for y in x:
             if y:
@@ -793,7 +837,8 @@ class Algorithm(QObject):
                         # Continue with previous line
                         self.nextMove()
                 else:
-                    fromFile, fromRank, toFile, toRank = self.fromChesscomMove(token, self.currentPlayer)
+                    fromFile, fromRank, toFile, toRank = self.fromChesscomMove(
+                        token, self.currentPlayer)
                     self.makeMove(fromFile, fromRank, toFile, toRank)
                 prev = token
                 i += 1
@@ -812,8 +857,10 @@ class Algorithm(QObject):
             for _ in range(move - 1):
                 self.nextMove()
         # Emit signal to update player names and rating
-        self.playerNamesChanged.emit(self.redName, self.blueName, self.yellowName, self.greenName)
-        self.playerRatingChanged.emit(self.redRating, self.blueRating, self.yellowRating, self.greenRating)
+        self.playerNamesChanged.emit(
+            self.redName, self.blueName, self.yellowName, self.greenName)
+        self.playerRatingChanged.emit(
+            self.redRating, self.blueRating, self.yellowRating, self.greenRating)
         return True
 
     def parsePgn4(self, pgn4):
@@ -887,7 +934,8 @@ class Algorithm(QObject):
                             # Continue with previous line
                             self.nextMove()
                     else:
-                        fromFile, fromRank, toFile, toRank = self.fromAlgebraic(token, self.currentPlayer)
+                        fromFile, fromRank, toFile, toRank = self.fromAlgebraic(
+                            token, self.currentPlayer)
                         self.makeMove(fromFile, fromRank, toFile, toRank)
                     prev = token
                     i += 1
@@ -902,7 +950,8 @@ class Algorithm(QObject):
             for action in actions:
                 exec('self.' + action)
         # Emit signal to update player names
-        self.playerNamesChanged.emit(self.redName, self.blueName, self.yellowName, self.greenName)
+        self.playerNamesChanged.emit(
+            self.redName, self.blueName, self.yellowName, self.greenName)
         return True
 
     def traverse(self, tree, children):
@@ -919,6 +968,7 @@ class Algorithm(QObject):
 
 class Teams(Algorithm):
     """A subclass of Algorithm for the 4-player chess Teams variant."""
+
     def __init__(self, actors):
         super().__init__(actors)
         self.variant = 'Teams'
@@ -961,10 +1011,20 @@ class Teams(Algorithm):
                 if child.name == moveString:
                     self.currentMove = child
                     self.updateMoveText()  # Make current move selected in move list
-
         # Make the move
         self.board.makeMove(fromFile, fromRank, toFile, toRank)
 
+        # check for pawn promotion opportunity
+        requestPromote = False
+        if piece == 4: # if piece is pawn
+            if self.currentPlayer == self.Red and toRank == 10:
+                requestPromote = True
+            elif self.currentPlayer == self.Blue and toFile == 10:
+                requestPromote = True
+            elif self.currentPlayer == self.Yellow and toRank == 3:
+                requestPromote = True
+            elif self.currentPlayer == self.Green and toFile == 3:
+                requestPromote = True
         # Increment move number
         self.moveNumber += 1
 
@@ -978,6 +1038,9 @@ class Teams(Algorithm):
         # Rotate player queue and get next player from the queue (first element)
         self.playerQueue.rotate(-1)
         self.setCurrentPlayer(self.playerQueue[0])
+        if requestPromote:
+          self.promoteSpace = (toFile, toRank)
+          self.setCurrentPlayer(self.NoPlayer)
 
         return True
 
@@ -985,6 +1048,7 @@ class Teams(Algorithm):
 class FFA(Algorithm):
     """A subclass of Algorithm for the 4-player chess Free-For-All (FFA) variant."""
     # TODO implement FFA class
+
     def __init__(self):
         super().__init__()
         self.variant = 'Free-For-All'

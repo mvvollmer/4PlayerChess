@@ -17,7 +17,8 @@ class RandomStrategy(Strategy):
     poss_moves = moves + captures
     toFile, toRank = random.choice(poss_moves)
     return file, rank, toFile, toRank
-
+  def promote_pawn(self, board: Board, promote_space: None or tuple):
+    return random.choice(['N', 'B', 'Q', 'R'])
 
 
 

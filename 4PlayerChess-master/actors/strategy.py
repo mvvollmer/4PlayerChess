@@ -11,6 +11,11 @@ class Strategy():
     # pass the actual gameboard to the actor to allow them to move. 
     pass
 
+  def promote_pawn(self, board: Board, promote_space: None or tuple):
+    # given a board state, determine what to promote
+    # promote space is the file, rank of the piece being promoted
+    pass
+
   def getLegalMoves(self, board: Board, piece: int, fromFile: int, fromRank: int):
     # get legal moves for a piece given the board state. Taken from view function.
     # TODO: check that when en-passant and checks/checkmates are working that the board functions used here

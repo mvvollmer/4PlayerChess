@@ -130,6 +130,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.boardResetButton.clicked.connect(self.view.repaint)  # Forced repaint
         self.boardResetButton.clicked.connect(self.moveListWidget.clear)
         self.boardResetButton.clicked.connect(self.resetComment)
+        self.boardNPromoteButton.clicked.connect(lambda: self.algorithm.promoteValue('N'))
+        self.boardRPromoteButton.clicked.connect(lambda: self.algorithm.promoteValue('R'))
+        self.boardBPromoteButton.clicked.connect(lambda: self.algorithm.promoteValue('B'))
+        self.boardQPromoteButton.clicked.connect(lambda: self.algorithm.promoteValue('Q'))
         self.setFenButton.clicked.connect(self.setFen4)
         self.loadPgnButton.clicked.connect(self.openFileNameDialog)
         self.savePgnButton.clicked.connect(self.saveFileDialog)
@@ -152,14 +156,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.moveHighlight = 0
 
         self.timer.timeout.connect(self.game_loop)
-        self.timer.start(100)
+        self.timer.start(10)
 
     def game_loop(self):
       if self.algorithm.currentPlayer in self.algorithm.aiActorPos:
-        for actor in self.algorithm.actors:
-          if self.algorithm.currentPlayer == actor[0]:
-            fromFile, fromRank, toFile, toRank = actor[1].make_move(self.algorithm.board)
-            self.algorithm.makeMove(fromFile, fromRank, toFile, toRank)
+          for actor in self.algorithm.actors:
+              if self.algorithm.currentPlayer == actor[0]:
+                  fromFile, fromRank, toFile, toRank = actor[1].make_move(self.algorithm.board)
+                  self.algorithm.makeMove(fromFile, fromRank, toFile, toRank)
+      if self.algorithm.currentPlayer == self.algorithm.NoPlayer:
+          curr_player = self.algorithm.playerQueue[3]
+          if curr_player in self.algorithm.aiActorPos:
+              for actor in self.algorithm.actors:
+                  if curr_player == actor[0]:
+                      self.algorithm.promoteValue(actor[1].promote_pawn(self.algorithm.board, self.algorithm.promoteSpace))
 
     def checkUpdate(self):
         """Checks if update is available and shows update dialog."""
