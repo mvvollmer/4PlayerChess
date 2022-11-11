@@ -684,7 +684,7 @@ QPushButton#boardResetButton {
            <x>10</x>
            <y>30</y>
            <width>302</width>
-           <height>72</height>
+           <height>80</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -769,6 +769,50 @@ color: rgb(0, 0, 0);</string>
               </property>
               <property name="text">
                <string>Reset Board</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QPushButton" name="boardNPromoteButton">
+              <property name="statusTip">
+               <string>Knight</string>
+              </property>
+              <property name="text">
+               <string>Knight</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="boardBPromoteButton">
+              <property name="statusTip">
+               <string>Bishop</string>
+              </property>
+              <property name="text">
+               <string>Bishop</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="boardRPromoteButton">
+              <property name="statusTip">
+               <string>Rook</string>
+              </property>
+              <property name="text">
+               <string>Rook</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="boardQPromoteButton">
+              <property name="statusTip">
+               <string>Queen</string>
+              </property>
+              <property name="text">
+               <string>Queen</string>
               </property>
              </widget>
             </item>
