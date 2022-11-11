@@ -181,7 +181,6 @@ class Algorithm(QObject):
         if self.board.checkMate(self.board.colorMapping[self.playerQueue[0]]):
             self.currentPlayer = self.NoPlayer
 
-
     def setPlayerQueue(self, currentPlayer):
         """Rotates player queue such that the current player is the first in the queue."""
         while self.playerQueue[0] != currentPlayer:

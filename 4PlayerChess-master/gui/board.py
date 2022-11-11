@@ -90,6 +90,7 @@ class Board(QObject):
     #     return index256[(((bitboard & -bitboard) * debruijn256) >> 248) & 255]
 
     def bitScanForward(self, bitboard):
+        assert bitboard != 0
         return int(math.log2(bitboard & -bitboard))
 
     def getSquares(self, bitboard):
