@@ -723,13 +723,14 @@ class View(QWidget):
 
     def highlightPlayer(self, player):
         """Adds highlight for player to indicate turn. Removes highlights for other players if they exist."""
-        self.addHighlight(self.playerHighlights[player])
-        for otherPlayer in self.playerHighlights:
-            if otherPlayer != player:
-                try:
-                    self.removeHighlight(self.playerHighlights[otherPlayer])
-                except ValueError:
-                    pass
+        if player != '?':
+          self.addHighlight(self.playerHighlights[player])
+          for otherPlayer in self.playerHighlights:
+              if otherPlayer != player:
+                  try:
+                      self.removeHighlight(self.playerHighlights[otherPlayer])
+                  except ValueError:
+                      pass
 
     def highlightChecks(self):
         """Adds red square highlight for kings in check."""

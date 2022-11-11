@@ -748,6 +748,34 @@ class Board(QObject):
         # If castling move, move king and rook to castling squares instead of ordinary move
         move = char + ' ' + chr(fromFile + 97) + str(fromRank + 1) + ' ' + \
             captured + ' ' + chr(toFile + 97) + str(toRank + 1)
+
+        # Update Pawn Promotion
+        # red pawn promotion
+        # redPawnPromotion = (toFile, toRank) == (3, 10) or (
+        #     toFile, toRank) == (4, 10) or (toFile, toRank) == (5, 10) or (toFile, toRank) == (6, 10) or (toFile, toRank) == (7, 10) or (toFile, toRank) == (8, 10) or (toFile, toRank) == (9, 10) or (toFile, toRank) == (10, 10)
+        # if char == 'rP' and redPawnPromotion:
+        #     # option = input("Make you choice: Q, R, K, B")
+        #     self.setData(fromFile, fromRank, ' ')
+        #     self.setData(toFile, toRank, 'rQ')
+        # # blue pawn promotion
+        # bluePawnPromotion = (toFile, toRank) == (10, 10) or (
+        #     toFile, toRank) == (10, 9) or (toFile, toRank) == (10, 8) or (toFile, toRank) == (10, 7) or (toFile, toRank) == (10, 6) or (toFile, toRank) == (10, 5) or (toFile, toRank) == (10, 4) or (toFile, toRank) == (10, 3)
+        # if char == 'bP' and bluePawnPromotion:
+        #     self.setData(fromFile, fromRank, ' ')
+        #     self.setData(toFile, toRank, 'bQ')
+        # # yellow pawn promotion
+        # yellowPawnPromotion = (toFile, toRank) == (3, 3) or (toFile, toRank) == (4, 3) or (toFile, toRank) == (5, 3) or (toFile, toRank) == (
+        #     6, 3) or (toFile, toRank) == (7, 3) or (toFile, toRank) == (8, 3) or (toFile, toRank) == (9, 3) or (toFile, toRank) == (10, 3)
+        # if char == 'yP' and yellowPawnPromotion:
+        #     self.setData(fromFile, fromRank, ' ')
+        #     self.setData(toFile, toRank, 'yQ')
+        # # green pawn promotion
+        # greenPawnPromotion = (toFile, toRank) == (3, 10) or (toFile, toRank) == (3, 9) or (toFile, toRank) == (3, 8) or (toFile, toRank) == (
+        #     3, 7) or (toFile, toRank) == (3, 6) or (toFile, toRank) == (3, 5) or (toFile, toRank) == (3, 4) or (toFile, toRank) == (3, 3)
+        # if char == 'gP' and greenPawnPromotion:
+        #     self.setData(fromFile, fromRank, ' ')
+        #     self.setData(toFile, toRank, 'gQ')
+
         # check for enpassant
         if char[1] == "P" and captured == " " and abs(fromFile - toFile) == 1 and abs(fromRank - toRank) == 1:
             color = char[0]
@@ -850,33 +878,6 @@ class Board(QObject):
         fromBB = 1 << self.square(fromFile, fromRank)
         toBB = 1 << self.square(toFile, toRank)
         fromToBB = fromBB ^ toBB
-
-        # Update Pawn Promotion
-        # red pawn promotion
-        redPawnPromotion = (toFile, toRank) == (3, 10) or (
-            toFile, toRank) == (4, 10) or (toFile, toRank) == (5, 10) or (toFile, toRank) == (6, 10) or (toFile, toRank) == (7, 10) or (toFile, toRank) == (8, 10) or (toFile, toRank) == (9, 10) or (toFile, toRank) == (10, 10)
-        if char == 'rP' and redPawnPromotion:
-            # option = input("Make you choice: Q, R, K, B")
-            self.setData(fromFile, fromRank, ' ')
-            self.setData(toFile, toRank, 'rQ')
-        # blue pawn promotion
-        bluePawnPromotion = (toFile, toRank) == (10, 10) or (
-            toFile, toRank) == (10, 9) or (toFile, toRank) == (10, 8) or (toFile, toRank) == (10, 7) or (toFile, toRank) == (10, 6) or (toFile, toRank) == (10, 5) or (toFile, toRank) == (10, 4) or (toFile, toRank) == (10, 3)
-        if char == 'bP' and bluePawnPromotion:
-            self.setData(fromFile, fromRank, ' ')
-            self.setData(toFile, toRank, 'bQ')
-        # yellow pawn promotion
-        yellowPawnPromotion = (toFile, toRank) == (3, 3) or (toFile, toRank) == (4, 3) or (toFile, toRank) == (5, 3) or (toFile, toRank) == (
-            6, 3) or (toFile, toRank) == (7, 3) or (toFile, toRank) == (8, 3) or (toFile, toRank) == (9, 3) or (toFile, toRank) == (10, 3)
-        if char == 'yP' and yellowPawnPromotion:
-            self.setData(fromFile, fromRank, ' ')
-            self.setData(toFile, toRank, 'yQ')
-        # green pawn promotion
-        greenPawnPromotion = (toFile, toRank) == (3, 10) or (toFile, toRank) == (3, 9) or (toFile, toRank) == (3, 8) or (toFile, toRank) == (
-            3, 7) or (toFile, toRank) == (3, 6) or (toFile, toRank) == (3, 5) or (toFile, toRank) == (3, 4) or (toFile, toRank) == (3, 3)
-        if char == 'gP' and greenPawnPromotion:
-            self.setData(fromFile, fromRank, ' ')
-            self.setData(toFile, toRank, 'gQ')
 
         # Move piece
         self.pieceBB[color] ^= fromToBB

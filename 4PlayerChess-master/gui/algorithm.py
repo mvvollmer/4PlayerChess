@@ -68,6 +68,7 @@ class Algorithm(QObject):
         self.board = Board(14, 14)
         self.result = self.NoResult
         self.currentPlayer = self.NoPlayer
+        self.promoteSpace = None
         self.moveNumber = 0
         self.currentMove = self.Node('root', [], None)
         self.currentMove.fen4 = self.startFen4
@@ -175,11 +176,10 @@ class Algorithm(QObject):
         if self.currentPlayer == value:
             return
         self.currentPlayer = value
-        self.setPlayerQueue(self.currentPlayer)
+        # self.setPlayerQueue(self.currentPlayer)
         self.currentPlayerChanged.emit(self.currentPlayer)
         if self.board.checkMate(self.board.colorMapping[self.playerQueue[0]]):
             self.currentPlayer = self.NoPlayer
-            print('gameover')
 
 
     def setPlayerQueue(self, currentPlayer):
@@ -273,10 +273,12 @@ class Algorithm(QObject):
         self.setResult(self.NoResult)
         if SETTINGS.value('chesscom'):
             self.setCurrentPlayer(fen4[0].lower())
+            self.setPlayerQueue(self.currentPlayer)
             self.moveNumber = 0
             self.fenMoveNumber = 1
         else:
             self.setCurrentPlayer(fen4.split(' ')[1])
+            self.setPlayerQueue(self.currentPlayer)
             self.moveNumber = int(fen4.split(' ')[-2])
             self.fenMoveNumber = int(fen4.split(' ')[-2]) + 1
         self.currentMove = self.Node('root', [], None)
@@ -546,6 +548,16 @@ class Algorithm(QObject):
     def makeMove(self, fromFile, fromRank, toFile, toRank):
         """This method must be implemented to define the proper logic corresponding to the game type (Teams or FFA)."""
         return False
+    
+    def promoteValue(self, piece):
+        color = self.playerQueue[3]
+        charPiece = f'{color}{piece}'
+        piece, color = self.board.getPieceColor(charPiece)
+        if not self.board.checkMate(color) and self.promoteSpace is not None:
+            self.board.setData(self.promoteSpace[0], self.promoteSpace[1], charPiece)
+            self.promoteSpace = None
+            self.setCurrentPlayer(self.playerQueue[0])
+                # Update FEN4 and PGN4
 
     def getPgn4(self):
         """Generates PGN4 from current game."""
@@ -1004,6 +1016,17 @@ class Teams(Algorithm):
         # Make the move
         self.board.makeMove(fromFile, fromRank, toFile, toRank)
 
+        # check for pawn promotion opportunity
+        requestPromote = False
+        if piece == 4: # if piece is pawn
+            if self.currentPlayer == self.Red and toRank == 10:
+                requestPromote = True
+            elif self.currentPlayer == self.Blue and toFile == 10:
+                requestPromote = True
+            elif self.currentPlayer == self.Yellow and toRank == 3:
+                requestPromote = True
+            elif self.currentPlayer == self.Green and toFile == 3:
+                requestPromote = True
         # Increment move number
         self.moveNumber += 1
 
@@ -1017,6 +1040,9 @@ class Teams(Algorithm):
         # Rotate player queue and get next player from the queue (first element)
         self.playerQueue.rotate(-1)
         self.setCurrentPlayer(self.playerQueue[0])
+        if requestPromote:
+          self.promoteSpace = (toFile, toRank)
+          self.setCurrentPlayer(self.NoPlayer)
 
         return True
 
