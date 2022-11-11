@@ -1012,7 +1012,6 @@ class Teams(Algorithm):
                 if child.name == moveString:
                     self.currentMove = child
                     self.updateMoveText()  # Make current move selected in move list
-
         # Make the move
         self.board.makeMove(fromFile, fromRank, toFile, toRank)
 

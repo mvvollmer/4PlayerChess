@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 from PyQt5.QtCore import QObject, pyqtSignal, QSettings
 
 # Load settings
@@ -83,16 +84,24 @@ class Board(QObject):
         """Returns file and rank of square."""
         return (square & 15) - 1, (square >> 4) - 1
 
+    # def bitScanForward(self, bitboard):
+    #     """Finds the index of the least significant 1 bit (LS1B) using De Bruijn sequence multiplication."""
+    #     assert bitboard != 0
+    #     return index256[(((bitboard & -bitboard) * debruijn256) >> 248) & 255]
+
     def bitScanForward(self, bitboard):
-        """Finds the index of the least significant 1 bit (LS1B) using De Bruijn sequence multiplication."""
-        assert bitboard != 0
-        return index256[(((bitboard & -bitboard) * debruijn256) >> 248) & 255]
+        return int(math.log2(bitboard & -bitboard))
 
     def getSquares(self, bitboard):
         """Returns list of squares (file, rank) corresponding to ones in bitboard."""
         squares = []
         while bitboard != 0:
             square = self.bitScanForward(bitboard)
+            # print(square)
+            # print('---')
+            # print(bin(bitboard))
+            # print('----')
+            # print(bin(1 << square))
             squares.append(self.fileRank(square))
             bitboard ^= 1 << square
         return squares
@@ -308,7 +317,7 @@ class Board(QObject):
             for ptype in pieceTypes:
                 for pieceFR in self.getSquares(self.pieceSet(color, ptype)):
                     piece = self.square(pieceFR[0], pieceFR[1])
-                    totMoves + len(self.getSquares(self.legalMoves(ptype, piece, color)))
+                    totMoves = totMoves + len(self.getSquares(self.legalMoves(ptype, piece, color)))
             return totMoves == 0
         else:
             return False
@@ -317,7 +326,6 @@ class Board(QObject):
         """Pseudo-legal moves for piece type."""
         if self.kingInCheck(color)[0]:
             return self.legalMovesInCheck(piece, origin, color)
-
         if color in (RED, YELLOW):
             friendly = self.pieceBB[RED] | self.pieceBB[YELLOW]
         else:
@@ -364,12 +372,8 @@ class Board(QObject):
         attackerSquares = []
         attackedSquares = []
         attackRays = []
-
         for att in attackersList:
             attackerSquares.append(self.square(att[0], att[1]))
-
-
-
         if color in (RED, YELLOW):
             friendly = self.pieceBB[RED] | self.pieceBB[YELLOW]
         else:
@@ -379,11 +383,9 @@ class Board(QObject):
         else:
             pinMask = -1
 
-
         for attack in attackerSquares:
             attackRays.append(self.kingRay(attack, color))
             attackedSquares.append(self.getSquares(self.kingRay(attack, color)))
-
 
 
         if piece == PAWN:

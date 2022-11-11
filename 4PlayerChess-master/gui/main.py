@@ -156,7 +156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.moveHighlight = 0
 
         self.timer.timeout.connect(self.game_loop)
-        self.timer.start(100)
+        self.timer.start(10)
 
     def game_loop(self):
       if self.algorithm.currentPlayer in self.algorithm.aiActorPos:
