@@ -33,19 +33,15 @@ Game Loop:
   - wait for actions in gui (this is what we will need to reroute)
     - when made, go to make move function in algorithm (which handles the move and sets next player)
 
-Work for 11/4:
-Checkmates and checks: Miles finally seen
- - checkmate checks, movement restrictions based on them
- - handle teammate protection
-Pawn Promotion and En-passant: Yichen seen
-Add AI actors using strategy pattern: Andrew
- - class: Agent
-   - strategy: interface
-     - random moves extends strategy
-     - minimax extends strategy
-     - v2 extends strategy
+Things to consider for evaluation:
+Transposition Table: Hash positions w/ evaluations so to prevent reuse. Interesting if using alpha-beta pruning.
+Game-Phase Separation?
+ - Early Game: Does it matter (besides preventing early mates?)
+ - Mid Game: Likely very important
+    - how to handle mobility vs. king safety, likely very important
+ - End Game: How does the ability to potentially have two moves before one opponent get a turn change material needed to win?
+Tempo VS. Material
 
-New work deadlines:
- - get castling working, en-passant (Andrew)
- - debug checkmate code (Miles)
- - pawn promotion (Yichen)
+work:
+rewrite strategy helpers to use players when checking for legal moves / moveable pieces
+add function using function header below

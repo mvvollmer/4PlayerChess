@@ -10,10 +10,10 @@ class RandomStrategy(Strategy):
   def __init__(self, player):
     super().__init__(player)
   def make_move(self, board: Board):
-    movableP = super().getMovablePieces(board)
+    movableP = super().getMovablePieces(board, self.player)
     space, file, rank = random.choice(movableP)
     piece = board.getPiece(space)
-    moves, captures = self.getLegalMoves(board, piece, file, rank)
+    moves, captures = self.getLegalMoves(board, piece, file, rank, self.player)
     poss_moves = moves + captures
     toFile, toRank = random.choice(poss_moves)
     return file, rank, toFile, toRank
