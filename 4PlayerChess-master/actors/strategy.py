@@ -3,7 +3,7 @@ sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
 
 class Strategy():
-  def __init__(self, player):
+  def __init__(self, player: str):
     self.player = player
   def make_move(self, board: Board):
     # Make a move given the board state. Note, not handled in our implementation is the duplication
@@ -16,7 +16,7 @@ class Strategy():
     # promote space is the file, rank of the piece being promoted
     pass
 
-  def getLegalMoves(self, board: Board, piece: int, fromFile: int, fromRank: int):
+  def getLegalMoves(self, board: Board, piece: int, fromFile: int, fromRank: int, player: str):
     # get legal moves for a piece given the board state. Taken from view function.
     # TODO: check that when en-passant and checks/checkmates are working that the board functions used here
     #       still work
@@ -26,7 +26,7 @@ class Strategy():
                                       board.occupiedBB)
     return moves, captures
 
-  def getMovablePieces(self, board: Board):
+  def getMovablePieces(self, board: Board, player: str):
     # get the pieces which can move for this player
     moveable_pieces = []
     for i, space in enumerate(board.boardData):
@@ -36,6 +36,7 @@ class Strategy():
         moves, captures = self.getLegalMoves(board, piece, file, rank)
         if len(moves) != 0 or len(captures) != 0:
           moveable_pieces.append((space, file, rank))
-    return moveable_pieces
+    return moveable_pieces # list of tuples. ex tuple: ('rP', 3, 2)
 
-  # TODO: potentially add function for promote requests
+  def getNewBoard(self, board: Board, boardData: list):
+    pass
