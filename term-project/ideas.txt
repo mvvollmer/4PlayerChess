@@ -42,6 +42,8 @@ Game-Phase Separation?
  - End Game: How does the ability to potentially have two moves before one opponent get a turn change material needed to win?
 Tempo VS. Material
 
-work:
-rewrite strategy helpers to use players when checking for legal moves / moveable pieces
-add function using function header below
+Things to try:
+NegaMax instead of Minimax, NegaScout instead of NegaMax (iterative deepening + PV nodes in Transposition Tables)
+  https://en.wikipedia.org/wiki/Principal_variation_search
+  https://github.com/duilio/c4
+  
