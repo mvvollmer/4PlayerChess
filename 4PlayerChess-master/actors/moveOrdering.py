@@ -71,6 +71,15 @@ class KillerMoves():
     """
     return move in self.storedMoves[depth]
 
+  def sortMoves(self, moves, depth):
+    sortedMoves = []
+    for mv in moves:
+      if self.isKillerMove(mv, depth):
+        sortedMoves.insert(0, mv)
+      else:
+        sortedMoves.append(mv)
+    return sortedMoves
+
 # -----------------------------------------------------------------------------------------------------------
 # Transposition Table Section
 # -----------------------------------------------------------------------------------------------------------

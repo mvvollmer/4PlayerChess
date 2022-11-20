@@ -1,40 +1,76 @@
-from numpy import deprecate_with_doc
-from gui.board import Board
-from actors.strategy import Strategy
-import actor
 import sys
 import random
 
 sys.path.append('./4PlayerChess-master/')
+from gui.board import Board
+import actor
+from actors.strategy import Strategy
+from actors.moveOrdering import mvv_lva, KillerMoves
+
 
 
 class Minimax(Strategy):
     # self.eval = evaluation()
-    def __init__(self, actor, depth):
+    def __init__(self, actor, maxDepth):
         super().__init__(actor, "minimax")
-        self.depth = depth
+        self.maxDepth = maxDepth
+        self.killerMoves = KillerMoves()
+        self.nextColor = ['r', 'b', 'y', 'g']
+        while self.nextColor[0] != self.player:
+          self.nextColor.rotate(-1)
 
-    def minimax(self, color: actor, board: Board, depth: int, alpha: float = "-inf", beta: float = "-inf"):
+    def minimax(self, color: actor, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
         if board.checkMate(color):
-            return evaluation(board)
+            return evaluation(board), None
 
-        if maximizing_player:
-            maxEval = "-inf"
-            for square in board.getSquares:
-                eval = minimax(square, depth - 1, alpha, beta)
-                maxEval = max(maxEval, eval)
-                alpha = max(alpha, eval)
-                if beta <= alpha:
-                    break
-            return maxEval
+        moves, captures = self.getAllLegalMoves(color, board)
+        orderedCaptures = mvv_lva(captures, board.boardData)
+        orderedMoves = self.killerMoves.sortMoves(moves, depth)
+        actions = orderedCaptures + orderedMoves
+
+        if color == 'r' or color == 'y':
+            maxEval = float("-inf")
+            bestAction = None
+            for action in actions:
+                nextBoardState = self.getNewBoard(board, *action)
+                self.nextColor.rotate(-1) # this code might not work
+                eval = self.minimax(self.nextColor, nextBoardState, depth + 1, alpha, beta)
+                self.nextColor.rotate(1)
+                if eval > maxEval:
+                  maxEval = eval
+                  bestAction = action
+                  alpha = max(alpha, eval)
+                  if beta <= alpha:
+                      return maxEval, bestAction
+            return maxEval, bestAction
         else:
-            minEval = "inf"
-            for square in board.getSquares:
-                eval = minimax(square, depth - 1, alpha, beta)
-                minEval = min(minEval, eval)
-                if beta <= alpha:
-                    break
-            return minEval
+            minEval = float("inf")
+            bestAction = None
+            for square in board.getSquares():
+                nextBoardState = self.getNewBoard(board, *action)
+                self.nextColor.rotate(-1) # this code might not work
+                eval = self.minimax(square, depth - 1, alpha, beta)
+                self.nextColor.rotate(1)
+                if eval < minEval: 
+                  minEval = eval
+                  bestAction = action
+                  if beta <= alpha:
+                      return minEval, bestAction
+            return minEval, bestAction
 
     def make_move(self, board: Board):
-        moveableP = super().getMovablePieces(board)
+        self.minimax(self.nextColor, board, 0)
+
+    def getAllLegalMoves(self, color: str, board: Board):
+        movableP = super().getMovablePieces(board, color)
+        allMoves = []
+        allCaptures = []
+        for tup in movableP:
+          space, file, rank = tup
+          piece = board.getPiece(space)
+          moves, captures = self.getLegalMoves(board, piece, file, rank)
+          moves = list(map(lambda x: (file, rank, *x), moves))
+          captures = list(map(lambda x: (file, rank, *x), captures))
+          allMoves.append(moves)
+          allCaptures.append(captures)
+        return allMoves, allCaptures
