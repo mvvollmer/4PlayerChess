@@ -6,6 +6,7 @@ from gui.board import Board
 import actor
 from actors.strategy import Strategy
 from actors.moveOrdering import mvv_lva, KillerMoves
+from actors.evaluation import Evaluation
 
 
 
@@ -15,13 +16,14 @@ class Minimax(Strategy):
         super().__init__(actor, "minimax")
         self.maxDepth = maxDepth
         self.killerMoves = KillerMoves()
+        self.evaluation = Evaluation()
         self.nextColor = ['r', 'b', 'y', 'g']
         while self.nextColor[0] != self.player:
           self.nextColor.rotate(-1)
 
     def minimax(self, color: actor, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
         if board.checkMate(color):
-            return evaluation(board), None
+            return self.evaluation.evaluateBoard(color, board), None
 
         moves, captures = self.getAllLegalMoves(color, board)
         orderedCaptures = mvv_lva(captures, board.boardData)
@@ -36,6 +38,7 @@ class Minimax(Strategy):
                 self.nextColor.rotate(-1) # this code might not work
                 eval = self.minimax(self.nextColor, nextBoardState, depth + 1, alpha, beta)
                 self.nextColor.rotate(1)
+                # TODO: Add killer move heuristic
                 if eval > maxEval:
                   maxEval = eval
                   bestAction = action
