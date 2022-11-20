@@ -7,7 +7,7 @@ RED, BLUE, YELLOW, GREEN, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(10)
 
 class Evaluation():
 
-    def evaluateBoard(self, color: str, board: Board):
+    def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
         if color in (RED, YELLOW):
             evalValue = evalValue + (self.pieceValues(RED, board) + self.pieceValues(YELLOW, board)) - (

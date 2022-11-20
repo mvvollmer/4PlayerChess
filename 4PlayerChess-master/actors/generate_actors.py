@@ -2,11 +2,13 @@ import sys
 sys.path.append('./4PlayerChess-master/')
 from actors.actor import Actor
 from actors.randomStrategy import RandomStrategy
+from actors.minimaxStrategy import MinimaxStrategy
 
 player_colors = ['r', 'b', 'y', 'g']
 
 # Str --> Strategy:
 # random: RandomStrategy
+# minimax: minimaxStrategy
 # none: Normal Player
 
 # File for converting input string into Actor class objects
@@ -21,6 +23,10 @@ def generate_actors(input_strings):
     if player == 'random':
       rStrat = RandomStrategy(player_colors[i])
       actor = Actor(rStrat)
+      players.append((player_colors[i], actor))
+    elif player == 'minimax':
+      mStrat = MinimaxStrategy(player_colors[i], 4)
+      actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   
   return players

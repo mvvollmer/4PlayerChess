@@ -385,7 +385,6 @@ class Board(QObject):
 
     def legalMoves(self, piece, origin, color):
         """Pseudo-legal moves for piece type."""
-        print(self.evaluateBoard(color))
         if self.kingInCheck(color)[0]:
             return self.legalMovesInCheck(piece, origin, color)
         if color in (RED, YELLOW):

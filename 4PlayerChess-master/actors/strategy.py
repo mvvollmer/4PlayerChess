@@ -57,3 +57,19 @@ class Strategy():
     newBoard.makeMove(fromFile, fromRank, toFile, toRank)
     return newBoard
 
+  def getAllLegalMoves(self, color: str, board: Board):
+      movableP = self.getMovablePieces(board, color)
+      allMoves = []
+      allCaptures = []
+      for tup in movableP:
+        space, file, rank = tup
+        piece = board.getPiece(space)
+        moves, captures = self.getLegalMoves(board, piece, file, rank)
+        moves = list(map(lambda x: (file, rank, *x), moves))
+        captures = list(map(lambda x: (file, rank, *x), captures))
+        if len(moves) != 0:
+          allMoves += moves
+        if len(captures) != 0:
+          allCaptures += captures
+      return allMoves, allCaptures
+

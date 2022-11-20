@@ -1,32 +1,33 @@
 import sys
 import random
+from collections import deque
 
 sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
-import actor
 from actors.strategy import Strategy
 from actors.moveOrdering import mvv_lva, KillerMoves
 from actors.evaluation import Evaluation
 
 
 
-class Minimax(Strategy):
+class MinimaxStrategy(Strategy):
     # self.eval = evaluation()
-    def __init__(self, actor, maxDepth):
-        super().__init__(actor, "minimax")
+    def __init__(self, player, maxDepth):
+        super().__init__(player)
         self.maxDepth = maxDepth
-        self.killerMoves = KillerMoves()
+        self.killerMoves = KillerMoves(maxDepth)
         self.evaluation = Evaluation()
-        self.nextColor = ['r', 'b', 'y', 'g']
+        self.nextColor = deque(['r', 'b', 'y', 'g'])
         while self.nextColor[0] != self.player:
           self.nextColor.rotate(-1)
 
-    def minimax(self, color: actor, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
-        if board.checkMate(color):
-            return self.evaluation.evaluateBoard(color, board), None
-
+    def negamax(self, color: str, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
+        colorNum = board.colorMapping[color]
+        if board.checkMate(colorNum):
+            return self.evaluation.evaluateBoard(colorNum, board), None
         moves, captures = self.getAllLegalMoves(color, board)
         orderedCaptures = mvv_lva(captures, board.boardData)
+
         orderedMoves = self.killerMoves.sortMoves(moves, depth)
         actions = orderedCaptures + orderedMoves
 
@@ -36,7 +37,7 @@ class Minimax(Strategy):
             for action in actions:
                 nextBoardState = self.getNewBoard(board, *action)
                 self.nextColor.rotate(-1) # this code might not work
-                eval = self.minimax(self.nextColor, nextBoardState, depth + 1, alpha, beta)
+                eval = -self.negamax(self.nextColor[0], nextBoardState, depth + 1, -beta, -alpha)
                 self.nextColor.rotate(1)
                 # TODO: Add killer move heuristic
                 if eval > maxEval:
@@ -44,36 +45,10 @@ class Minimax(Strategy):
                   bestAction = action
                   alpha = max(alpha, eval)
                   if beta <= alpha:
+                      # pretty sure killer move is added here
                       return maxEval, bestAction
             return maxEval, bestAction
-        else:
-            minEval = float("inf")
-            bestAction = None
-            for square in board.getSquares():
-                nextBoardState = self.getNewBoard(board, *action)
-                self.nextColor.rotate(-1) # this code might not work
-                eval = self.minimax(square, depth - 1, alpha, beta)
-                self.nextColor.rotate(1)
-                if eval < minEval: 
-                  minEval = eval
-                  bestAction = action
-                  if beta <= alpha:
-                      return minEval, bestAction
-            return minEval, bestAction
 
     def make_move(self, board: Board):
-        self.minimax(self.nextColor, board, 0)
+        self.negamax(self.nextColor[0], board, 0)
 
-    def getAllLegalMoves(self, color: str, board: Board):
-        movableP = super().getMovablePieces(board, color)
-        allMoves = []
-        allCaptures = []
-        for tup in movableP:
-          space, file, rank = tup
-          piece = board.getPiece(space)
-          moves, captures = self.getLegalMoves(board, piece, file, rank)
-          moves = list(map(lambda x: (file, rank, *x), moves))
-          captures = list(map(lambda x: (file, rank, *x), captures))
-          allMoves.append(moves)
-          allCaptures.append(captures)
-        return allMoves, allCaptures
