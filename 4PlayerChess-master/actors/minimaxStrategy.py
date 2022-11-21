@@ -48,5 +48,6 @@ class MinimaxStrategy(Strategy):
         return maxEval, bestAction
 
     def make_move(self, board: Board):
-        self.negamax(self.nextColor[0], board, 0)
+        _, action = self.negamax(self.nextColor[0], board, 0)
+        return action
 

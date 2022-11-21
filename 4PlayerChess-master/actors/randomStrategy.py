@@ -13,7 +13,7 @@ class RandomStrategy(Strategy):
     movableP = super().getMovablePieces(board, self.player)
     space, file, rank = random.choice(movableP)
     piece = board.getPiece(space)
-    moves, captures = self.getLegalMoves(board, piece, file, rank)
+    moves, captures = self.getLegalMoves(board, piece, file, rank, self.player)
     poss_moves = moves + captures
     toFile, toRank = random.choice(poss_moves)
     return file, rank, toFile, toRank
@@ -89,3 +89,5 @@ class RandomStrategy(Strategy):
 #   for bb in l:
 #     newBoard.printBB(bb)
 # print('--d--')
+# for bb in newBoard.enPassant:
+#   newBoard.printBB(bb)
