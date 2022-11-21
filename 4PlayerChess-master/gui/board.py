@@ -1421,7 +1421,7 @@ class Board(QObject):
     def updateEnPassant(self, piece, color, fromFile, fromRank, toFile, toRank):
         # remove any previous enPassant flags since it is a new move for this color
         self.enPassant[color] = 0
-        if piece == PAWN and abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2:
+        if piece == PAWN and (abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2):
             # add enpassant value
             offsetFile = 0
             offsetRank = 0

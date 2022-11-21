@@ -23,7 +23,7 @@ class Evaluation():
         return evalValue
 
 
-    def pieceValues(self, color: str, board: Board):
+    def pieceValues(self, color: int, board: Board):
         totPVal = 0
         totPVal = totPVal + (len(board.getSquares(board.pieceSet(color, PAWN))) * 10)
         totPVal = totPVal + (len(board.getSquares(board.pieceSet(color, KNIGHT))) * 30)
@@ -33,7 +33,7 @@ class Evaluation():
         return totPVal
 
     # want low king saftey val, 0 = king fully protected, no attackers
-    def kingSafetyVal(self, color: str, board: Board):
+    def kingSafetyVal(self, color: int, board: Board):
         kingSquare = board.bitScanForward(board.pieceSet(color, KING))
         kingFile, kingRank = board.fileRank(kingSquare)
         KSV = 5 * board.attackersValue(kingFile, kingRank, color)
