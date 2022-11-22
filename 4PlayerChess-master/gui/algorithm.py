@@ -1029,6 +1029,7 @@ class Teams(Algorithm):
         self.moveNumber += 1
 
         # print(self.currentPlayer)
+        # print(fromFile, fromRank, toFile, toRank)
         # print(self.board.boardData[:14])
         # print(self.board.boardData[14:28])
         # print(self.board.boardData[28:42])
