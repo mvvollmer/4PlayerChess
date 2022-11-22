@@ -27,6 +27,7 @@ APP = '4PlayerChess'
 SETTINGS = QSettings(COM, APP)
 
 RED, BLUE, YELLOW, GREEN, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(10)
+identifier = ['r', 'b', 'y', 'g', 'P', 'N', 'B', 'R', 'Q', 'K']
 
 QUEENSIDE, KINGSIDE = (0, 1)
 
@@ -385,7 +386,6 @@ class Board(QObject):
 
     def legalMoves(self, piece, origin, color):
         """Pseudo-legal moves for piece type."""
-        print(self.evaluateBoard(color))
         if self.kingInCheck(color)[0]:
             return self.legalMovesInCheck(piece, origin, color)
         if color in (RED, YELLOW):
@@ -429,7 +429,6 @@ class Board(QObject):
     def legalMovesInCheck(self, piece, origin, color):
         kingSquare = self.bitScanForward(self.pieceSet(color, KING))
         kingFile, kingRank = self.fileRank(kingSquare)
-
         attackersList = self.attackers(kingFile, kingRank, color)
         attackerSquares = []
         attackedSquares = []
@@ -645,6 +644,7 @@ class Board(QObject):
     def attackers(self, file, rank, color):
         attackers = []
         kingSquareInt = self.square(file, rank)
+        identifier = ['r', 'b', 'y', 'g', 'P', 'N', 'B', 'R', 'Q', 'K']
         if self.attacked(kingSquareInt, color):
            if color in (RED, YELLOW) :
                 opposite = (BLUE, GREEN)
@@ -674,7 +674,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -707,7 +707,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -745,7 +745,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(BISHOP)
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(QUEEN)
 
@@ -776,14 +776,14 @@ class Board(QObject):
                        # if Bishop is attacking
                        attackers.append(BISHOP)
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(QUEEN)
 
         return attackers
 
     def attacked(self, square, color):
-        """Checks if a square is attacked by a player."""
+        """Checks if a square is attacked by a player. MUST BE CALLED W/ OPPOSITE TEAM AS COLOR"""
         if color == RED:
             opposite = YELLOW
         elif color == YELLOW:
@@ -841,7 +841,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -874,7 +874,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -912,7 +912,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(BISHOP)
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(QUEEN)
 
@@ -943,7 +943,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        attackers.append(BISHOP)
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(QUEEN)
 
@@ -1422,7 +1422,7 @@ class Board(QObject):
     def updateEnPassant(self, piece, color, fromFile, fromRank, toFile, toRank):
         # remove any previous enPassant flags since it is a new move for this color
         self.enPassant[color] = 0
-        if piece == PAWN and abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2:
+        if piece == PAWN and (abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2):
             # add enpassant value
             offsetFile = 0
             offsetRank = 0

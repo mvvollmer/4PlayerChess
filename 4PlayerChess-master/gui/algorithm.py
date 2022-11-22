@@ -1028,6 +1028,23 @@ class Teams(Algorithm):
         # Increment move number
         self.moveNumber += 1
 
+        # print(self.currentPlayer)
+        # print(fromFile, fromRank, toFile, toRank)
+        # print(self.board.boardData[:14])
+        # print(self.board.boardData[14:28])
+        # print(self.board.boardData[28:42])
+        # print(self.board.boardData[42:56])
+        # print(self.board.boardData[56:70])
+        # print(self.board.boardData[70:84])
+        # print(self.board.boardData[84:98])
+        # print(self.board.boardData[98:112])
+        # print(self.board.boardData[112:126])
+        # print(self.board.boardData[126:140])
+        # print(self.board.boardData[140:154])
+        # print(self.board.boardData[154:168])
+        # print(self.board.boardData[168:182])
+        # print(self.board.boardData[182:196])
+
         # Update FEN4 and PGN4
         fen4 = self.getFen4()
         self.getPgn4()
