@@ -415,6 +415,7 @@ class Board(QObject):
                 moves = 0
                 for move in self.getSquares((self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)):
                     if color in (RED, YELLOW):
+                        # this code works because we know king is not in check
                         if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(
                                 self.square(move[0], move[1]), GREEN):
                             moves = moves | (1 << self.square(move[0], move[1]))
@@ -510,6 +511,10 @@ class Board(QObject):
 
         elif piece == KING:
             moves = 0
+            # for king, since we always need to move this piece from its current position, we can consider it unoccupied
+            # when performing a check on mask blocked squares. We flip the bit before running the calculation and then 
+            # unflip to maintain code properly
+            self.occupiedBB ^= 1 << origin
             for move in self.getSquares(self.maskBlockedSquares(self.kingMoves(origin), origin) & ~friendly & pinMask):
                 if color in (RED, YELLOW):
                     if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(self.square(move[0], move[1]), GREEN):
@@ -517,6 +522,7 @@ class Board(QObject):
                 else:
                     if not self.attacked(self.square(move[0], move[1]), RED) and not self.attacked(self.square(move[0], move[1]), YELLOW):
                         moves = moves | (1 << self.square(move[0], move[1]))
+            self.occupiedBB ^= 1 << origin
             return moves
 
     def pawnMoves(self, origin, color, attacksOnly=False):
@@ -811,7 +817,7 @@ class Board(QObject):
         bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
         if bishopMoves & (self.pieceSet(color, BISHOP) | self.pieceSet(color, QUEEN)):
             return True
-        rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
+        rookMoves = self.maskBlockedSquares(self.rookMoves(square), square) ^ square
         if rookMoves & (self.pieceSet(color, ROOK) | self.pieceSet(color, QUEEN)):
             return True
         return False

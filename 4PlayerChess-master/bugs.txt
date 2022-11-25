@@ -1,0 +1,6 @@
+bitboard == 0 on king ray search
+sometimes king is considered to be off board and there exists an erroneous mate
+xN where x is a color. There is sometimes a view drawing error that tries to draw a piece that doesnt exist
+pawn mate error: check if pawns are being used correctly when being used for mates
+enpassant error: somehow pawns can perform an enpassant on empty spaces. 
+mvv_lva: captures error: sometimes board will try to index out of index captures
