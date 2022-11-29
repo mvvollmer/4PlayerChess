@@ -49,3 +49,23 @@ class Evaluation():
                 KSV = KSV + 2 * self.attackersValue(unProtSquare[0], unProtSquare[1], color)
         return KSV
 
+
+    def eval2(self, color):
+        evalValue = 0
+        if color in (RED, YELLOW):
+            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+                return -10000
+            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+                return 10000
+            evalValue =  self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW) - (
+                    self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN))
+        else:
+            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+                return 10000
+            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+                return -10000
+            evalValue = self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN) - (
+                    self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW))
+        return evalValue
+
+

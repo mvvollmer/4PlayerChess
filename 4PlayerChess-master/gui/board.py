@@ -829,6 +829,17 @@ class Board(QObject):
                 return True
         return False
 
+
+    def countLegalMovesForPlayer(self, color):
+        pieceTypes = [PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING]
+        totMoves = 0
+        for ptype in pieceTypes:
+            for pieceFR in self.getSquares(self.pieceSet(color, ptype)):
+                piece = self.square(pieceFR[0], pieceFR[1])
+                totMoves = totMoves + len(self.getSquares(self.legalMoves(ptype, piece, color)))
+        return totMoves
+
+
     def defenders(self, file, rank, color):
         defenders = []
         kingSquareInt = self.square(file, rank)
