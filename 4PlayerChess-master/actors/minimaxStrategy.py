@@ -64,7 +64,6 @@ class MinimaxStrategy(Strategy):
             # print(boardCopy.boardData[154:168])
             # print(boardCopy.boardData[168:182])
             # print(boardCopy.boardData[182:196])
-            # print(boardCopy.getChesscomFen4())
             # print('--- Action ---')
             # print(action)
             nextBoardState = self.getNewBoard(boardCopy)

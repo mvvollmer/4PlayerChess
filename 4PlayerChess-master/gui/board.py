@@ -1160,28 +1160,28 @@ class Board(QObject):
                 pieceFromBB = 1 << self.square(fromFile, fromRank)
                 pieceFromBB_ = 1 << self.square(toFile, toRank)
                 if color == RED and toFile > fromFile:  # kingside castle red
-                    pieceToBB = 1 << self.square(toFile + 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile + 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile - 2, toRank)
                 elif color == YELLOW and toFile < fromFile:  # kingside castle yellow
-                    pieceToBB = 1 << self.square(toFile - 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile - 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile + 2, toRank)
                 elif color == BLUE and toRank > fromRank:  # kingside castle blue
-                    pieceToBB = 1 << self.square(toFile, toRank + 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank + 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank - 2)
                 elif color == GREEN and toRank < fromRank:  # kingside castle green
-                    pieceToBB = 1 << self.square(toFile, toRank - 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank - 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank + 2)
                 elif color == RED and toFile < fromFile:  # queenside castle red
-                    pieceToBB = 1 << self.square(toFile - 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile - 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile + 3, toRank)
                 elif color == YELLOW and toFile > fromFile:  # queenside castle yellow
-                    pieceToBB = 1 << self.square(toFile + 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile + 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile - 3, toRank)
                 elif color == BLUE and toRank < fromRank:  # queenside castle blue
-                    pieceToBB = 1 << self.square(toFile, toRank - 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank - 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank + 3)
                 elif color == GREEN and toRank > fromRank:  # queenside castle green
-                    pieceToBB = 1 << self.square(toFile, toRank + 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank + 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank - 3)
                 else:  # invalid move
                     pieceToBB = 0

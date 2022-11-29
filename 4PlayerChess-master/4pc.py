@@ -31,8 +31,13 @@ def main():
     """Creates application and main window and sets application icon."""
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('resources/img/icon.svg'))
-    actors = generate_actors([*sys.argv])
-    window = MainWindow(actors)
+    moves = None
+    actors = []
+    if len(sys.argv) > 1 and sys.argv[1] == 'moves':
+      moves = eval(sys.argv[2])
+    else:
+      actors = generate_actors([*sys.argv])
+    window = MainWindow(actors, moves)
     screen = QRect(app.desktop().availableGeometry())
     x = screen.left() + (screen.width() - window.width()) / 2
     y = screen.top() + (screen.height() - window.height()) / 2
