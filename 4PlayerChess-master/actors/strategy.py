@@ -43,9 +43,9 @@ class Strategy():
           moveable_pieces.append((space, file, rank))
     return moveable_pieces # list of tuples. ex tuple: ('rP', 3, 2)
 
-  def getNewBoard(self, board: Board, fromFile, fromRank, toFile, toRank):
+  def getNewBoard(self, board: Board):
     """
-    Given a board and a new board state, return a new board struct that contains the new board state.
+    Given a board, get a new board that can't be used to make moves.
     Note: this board cannot be used to make moves on the actual board, it is only meant to be used with
     search algorithms
     """
@@ -56,7 +56,6 @@ class Strategy():
     newBoard.emptyBB = ~newBoard.occupiedBB
     newBoard.enPassant = copy.deepcopy(board.enPassant)
     newBoard.castle = copy.deepcopy(board.castle)
-    newBoard.makeMove(fromFile, fromRank, toFile, toRank)
     return newBoard
 
   def getAllLegalMoves(self, player: str, board: Board):

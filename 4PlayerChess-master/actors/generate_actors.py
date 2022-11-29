@@ -3,6 +3,7 @@ sys.path.append('./4PlayerChess-master/')
 from actors.actor import Actor
 from actors.randomStrategy import RandomStrategy
 from actors.minimaxStrategy import MinimaxStrategy
+from actors.evaluation import Evaluation, EvaluationV2
 
 player_colors = ['r', 'b', 'y', 'g']
 
@@ -25,7 +26,11 @@ def generate_actors(input_strings):
       actor = Actor(rStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax':
-      mStrat = MinimaxStrategy(player_colors[i], 1)
+      mStrat = MinimaxStrategy(player_colors[i], 1, Evaluation())
+      actor = Actor(mStrat)
+      players.append((player_colors[i], actor))
+    elif player == 'minimax2':
+      mStrat = MinimaxStrategy(player_colors[i], 1, EvaluationV2())
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   

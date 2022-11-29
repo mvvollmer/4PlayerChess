@@ -5,7 +5,11 @@ from gui.boardStruct import BoardStruct
 
 RED, BLUE, YELLOW, GREEN, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(10)
 
-class Evaluation():
+class EvalBase():
+  def evaluateBoard(self, color: int, board: Board):
+    pass
+
+class Evaluation(EvalBase):
 
     def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
@@ -67,23 +71,23 @@ class Evaluation():
                 KSV = KSV + 2 * board.attackersValue(unProtSquare[0], unProtSquare[1], color)
         return KSV
 
-
-    def eval2(self, color):
+class EvaluationV2(EvalBase):
+    def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
         if color in (RED, YELLOW):
-            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
                 return -10000
-            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
                 return 10000
-            evalValue =  self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW) - (
-                    self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN))
+            evalValue =  board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW) - (
+                    board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN))
         else:
-            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
                 return 10000
-            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
                 return -10000
-            evalValue = self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN) - (
-                    self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW))
+            evalValue = board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN) - (
+                    board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW))
         return evalValue
 
 

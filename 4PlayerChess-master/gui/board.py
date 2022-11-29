@@ -415,6 +415,7 @@ class Board(QObject):
                 moves = 0
                 for move in self.getSquares((self.kingMoves(origin) & ~friendly) | self.maskBlockedCastlingMoves(castlingMoves, origin, color)):
                     if color in (RED, YELLOW):
+                        # this code works because we know king is not in check
                         if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(
                                 self.square(move[0], move[1]), GREEN):
                             moves = moves | (1 << self.square(move[0], move[1]))
@@ -445,72 +446,62 @@ class Board(QObject):
             pinMask = -1
 
         for attack in attackerSquares:
-            attackRays.append(self.kingRay(attack, color))
-            attackedSquares.append(self.getSquares(self.kingRay(attack, color)))
+            attackRays.append(self.attackedKingRay(attack, color))
+            attackedSquares.append(self.getSquares(self.attackedKingRay(attack, color)))
 
+        attacks = len(attackersList)
 
         if piece == PAWN:
             moves = 0
             for move in self.getSquares(self.pawnMoves(origin, color) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == KNIGHT:
             moves = 0
             for move in self.getSquares(self.knightMoves(origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == BISHOP:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.bishopMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == ROOK:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == QUEEN:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == KING:
             moves = 0
+            # for king, since we always need to move this piece from its current position, we can consider it unoccupied
+            # when performing a check on mask blocked squares. We flip the bit before running the calculation and then 
+            # unflip to maintain code properly
+            self.occupiedBB ^= 1 << origin
             for move in self.getSquares(self.maskBlockedSquares(self.kingMoves(origin), origin) & ~friendly & pinMask):
                 if color in (RED, YELLOW):
                     if not self.attacked(self.square(move[0], move[1]), BLUE) and not self.attacked(self.square(move[0], move[1]), GREEN):
@@ -518,6 +509,7 @@ class Board(QObject):
                 else:
                     if not self.attacked(self.square(move[0], move[1]), RED) and not self.attacked(self.square(move[0], move[1]), YELLOW):
                         moves = moves | (1 << self.square(move[0], move[1]))
+            self.occupiedBB ^= 1 << origin
             return moves
 
     def pawnMoves(self, origin, color, attacksOnly=False):
@@ -641,76 +633,84 @@ class Board(QObject):
         kingSquare = self.bitScanForward(self.pieceSet(color, KING))
         return self.rayBetween(kingSquare, square) | self.rayBeyond(kingSquare, square)
 
+    def attackedKingRay(self, square, color):
+        """
+        Return the ray between king and attacker
+        .Added function.
+        """
+        kingSquare = self.bitScanForward(self.pieceSet(color, KING))
+        return self.rayBetween(kingSquare, square)
+
     def attackers(self, file, rank, color):
         attackers = []
         kingSquareInt = self.square(file, rank)
         identifier = ['r', 'b', 'y', 'g', 'P', 'N', 'B', 'R', 'Q', 'K']
-        if self.attackedV2(kingSquareInt, color):
+        if color in (RED, YELLOW) :
+            opposite = (BLUE, GREEN)
+            if self.attacked(kingSquareInt, BLUE) or self.attacked(kingSquareInt, GREEN):
+              for col in opposite:
+                  if col == RED:
+                      opp = YELLOW
+                  elif col == YELLOW:
+                      opp = RED
+                  elif col == BLUE:
+                      opp = GREEN
+                  elif col == GREEN:
+                      opp = BLUE
+                  if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+                      attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                  rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+                  if rookMoves & self.pieceSet(col, ROOK):
+                      # if rook is attacking
+                      attackers.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
 
-           if color in (RED, YELLOW) :
-                opposite = (BLUE, GREEN)
-                for col in opposite:
-                    if col == RED:
-                        opp = YELLOW
-                    elif col == YELLOW:
-                        opp = RED
-                    elif col == BLUE:
-                        opp = GREEN
-                    elif col == GREEN:
-                        opp = BLUE
-                    if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                        attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
-                    rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
-                    if rookMoves & self.pieceSet(col, ROOK):
-                        # if rook is attacking
-                        attackers.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
 
+                  if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+                      # if knight is attacking
+                      attackers.append(self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
 
-                    if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                        # if knight is attacking
-                        attackers.append(self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
+                  bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                  if bishopMoves & (self.pieceSet(col, BISHOP)):
+                      # if Bishop is attacking
+                      attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                    if bishopMoves & (self.pieceSet(col, BISHOP)):
-                        # if Bishop is attacking
-                        attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
+                  queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+                  if queenMoves & (self.pieceSet(col, QUEEN)):
+                      attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                    if queenMoves & (self.pieceSet(col, QUEEN)):
-                        attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
+        else:
+            opposite = (RED, YELLOW)
+            if self.attacked(kingSquareInt, RED) or self.attacked(kingSquareInt, YELLOW):
+              for col in opposite:
+                  if col == RED:
+                      opp = YELLOW
+                  elif col == YELLOW:
+                      opp = RED
+                  elif col == BLUE:
+                      opp = GREEN
+                  elif col == GREEN:
+                      opp = BLUE
+                  if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+                      attackers.append(
+                          self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                  rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+                  if rookMoves & self.pieceSet(col, ROOK):
+                      # if rook is attacking
+                      attackers.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
 
-           else:
-               opposite = (RED, YELLOW)
-               for col in opposite:
-                   if col == RED:
-                       opp = YELLOW
-                   elif col == YELLOW:
-                       opp = RED
-                   elif col == BLUE:
-                       opp = GREEN
-                   elif col == GREEN:
-                       opp = BLUE
-                   if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                       attackers.append(
-                           self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
-                   rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
-                   if rookMoves & self.pieceSet(col, ROOK):
-                       # if rook is attacking
-                       attackers.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
+                  if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+                      # if knight is attacking
+                      attackers.append(
+                          self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
 
-                   if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                       # if knight is attacking
-                       attackers.append(
-                           self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
+                  bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                  if bishopMoves & (self.pieceSet(col, BISHOP)):
+                      # if Bishop is attacking
+                      attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                   if bishopMoves & (self.pieceSet(col, BISHOP)):
-                       # if Bishop is attacking
-                       attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
-
-                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                   if queenMoves & (self.pieceSet(col, QUEEN)):
-                       attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
+                  queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+                  if queenMoves & (self.pieceSet(col, QUEEN)):
+                      attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
         return attackers
 
@@ -804,7 +804,7 @@ class Board(QObject):
         bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
         if bishopMoves & (self.pieceSet(color, BISHOP) | self.pieceSet(color, QUEEN)):
             return True
-        rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
+        rookMoves = self.maskBlockedSquares(self.rookMoves(square), square) ^ square
         if rookMoves & (self.pieceSet(color, ROOK) | self.pieceSet(color, QUEEN)):
             return True
         return False
@@ -864,54 +864,77 @@ class Board(QObject):
                         # if rook is attacking
                         defenders.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
 
+    #               if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+    #                   # if knight is attacking
+    #                   defenders.append(self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
 
-                    if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                        # if knight is attacking
-                        defenders.append(self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
+    #               bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+    #               if bishopMoves & (self.pieceSet(col, BISHOP)):
+    #                   # if Bishop is attacking
+    #                   defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                    if bishopMoves & (self.pieceSet(col, BISHOP)):
-                        # if Bishop is attacking
-                        defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
+    #               queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+    #               if queenMoves & (self.pieceSet(col, QUEEN)):
+    #                   defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                    if queenMoves & (self.pieceSet(col, QUEEN)):
-                        defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
+    #       else:
+    #           opposite = (BLUE, GREEN)
+    #           for col in opposite:
+    #               if col == RED:
+    #                   opp = YELLOW
+    #               elif col == YELLOW:
+    #                   opp = RED
+    #               elif col == BLUE:
+    #                   opp = GREEN
+    #               elif col == GREEN:
+    #                   opp = BLUE
+    #               if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+    #                   defenders.append(
+    #                       self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+    #               rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+    #               if rookMoves & self.pieceSet(col, ROOK):
+    #                   # if rook is attacking
+    #                   defenders.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
 
-           else:
-               opposite = (BLUE, GREEN)
-               for col in opposite:
-                   if col == RED:
-                       opp = YELLOW
-                   elif col == YELLOW:
-                       opp = RED
-                   elif col == BLUE:
-                       opp = GREEN
-                   elif col == GREEN:
-                       opp = BLUE
-                   if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                       defenders.append(
-                           self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
-                   rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
-                   if rookMoves & self.pieceSet(col, ROOK):
-                       # if rook is attacking
-                       defenders.append(self.getSquares(rookMoves & self.pieceSet(col, ROOK))[0])
+    #               if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+    #                   # if knight is attacking
+    #                   defenders.append(
+    #                       self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
 
-                   if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                       # if knight is attacking
-                       defenders.append(
-                           self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
+    #               bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+    #               if bishopMoves & (self.pieceSet(col, BISHOP)):
+    #                   # if Bishop is attacking
+    #                   defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                   if bishopMoves & (self.pieceSet(col, BISHOP)):
-                       # if Bishop is attacking
-                       defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
+    #               queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+    #               if queenMoves & (self.pieceSet(col, QUEEN)):
+    #                   defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
-                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                   if queenMoves & (self.pieceSet(col, QUEEN)):
-                       defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
-
-        return defenders
+    #     return defenders
+    
+    # Code being unused. If eventually used, make sure self.attacked calls are properly being called (w/ opposites as input color)
+    # Also check why opposite is equal to color tuple
+    # def defendersPieces(self, file, rank, color):
+    #     attackers = []
+    #     kingSquareInt = self.square(file, rank)
+    #     if self.attacked(kingSquareInt, color):
+    #        if color in (RED, YELLOW) :
+    #             opposite = (RED, YELLOW)
+    #             for col in opposite:
+    #                 if col == RED:
+    #                     opp = YELLOW
+    #                 elif col == YELLOW:
+    #                     opp = RED
+    #                 elif col == BLUE:
+    #                     opp = GREEN
+    #                 elif col == GREEN:
+    #                     opp = BLUE
+    #                 if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+    #                     attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+    #                 rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+    #                 if rookMoves & self.pieceSet(col, ROOK):
+    #                     # if rook is attacking
+    #                     attackers.append(ROOK)
 
     def defendersPieces(self, file, rank, color):
         attackers = []
@@ -935,52 +958,51 @@ class Board(QObject):
                         # if rook is attacking
                         attackers.append(ROOK)
 
+    #                 if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+    #                     # if knight is attacking
+    #                     attackers.append(KNIGHT)
 
-                    if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                        # if knight is attacking
-                        attackers.append(KNIGHT)
+    #                 bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+    #                 if bishopMoves & (self.pieceSet(col, BISHOP)):
+    #                     # if Bishop is attacking
+    #                     attackers.append(BISHOP)
 
-                    bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                    if bishopMoves & (self.pieceSet(col, BISHOP)):
-                        # if Bishop is attacking
-                        attackers.append(BISHOP)
+    #                 queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+    #                 if queenMoves & (self.pieceSet(col, QUEEN)):
+    #                     attackers.append(QUEEN)
 
-                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                    if queenMoves & (self.pieceSet(col, QUEEN)):
-                        attackers.append(QUEEN)
+    #        else:
+    #            opposite = (BLUE, GREEN)
+    #            for col in opposite:
+    #                if col == RED:
+    #                    opp = YELLOW
+    #                elif col == YELLOW:
+    #                    opp = RED
+    #                elif col == BLUE:
+    #                    opp = GREEN
+    #                elif col == GREEN:
+    #                    opp = BLUE
+    #                if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+    #                    attackers.append(PAWN)
+    #                rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+    #                if rookMoves & self.pieceSet(col, ROOK):
+    #                    # if rook is attacking
+    #                    attackers.append(ROOK)
 
-           else:
-               opposite = (BLUE, GREEN)
-               for col in opposite:
-                   if col == RED:
-                       opp = YELLOW
-                   elif col == YELLOW:
-                       opp = RED
-                   elif col == BLUE:
-                       opp = GREEN
-                   elif col == GREEN:
-                       opp = BLUE
-                   if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                       attackers.append(PAWN)
-                   rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
-                   if rookMoves & self.pieceSet(col, ROOK):
-                       # if rook is attacking
-                       attackers.append(ROOK)
+    #                if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+    #                    # if knight is attacking
+    #                    attackers.append(KNIGHT)
 
-                   if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
-                       # if knight is attacking
-                       attackers.append(KNIGHT)
+    #                bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+    #                if bishopMoves & (self.pieceSet(col, BISHOP)):
+    #                    # if Bishop is attacking
+    #                    attackers.append(BISHOP)
 
-                   bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
-                   if bishopMoves & (self.pieceSet(col, BISHOP)):
-                       # if Bishop is attacking
-                       attackers.append(BISHOP)
+    #                queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+    #                if queenMoves & (self.pieceSet(col, QUEEN)):
+    #                    attackers.append(QUEEN)
 
-                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
-                   if queenMoves & (self.pieceSet(col, QUEEN)):
-                       attackers.append(QUEEN)
-
-        return attackers
+    #     return attackers
 
     def kingInCheck(self, color):
         """Checks if a player's king is in check."""
@@ -1176,28 +1198,28 @@ class Board(QObject):
                 pieceFromBB = 1 << self.square(fromFile, fromRank)
                 pieceFromBB_ = 1 << self.square(toFile, toRank)
                 if color == RED and toFile > fromFile:  # kingside castle red
-                    pieceToBB = 1 << self.square(toFile + 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile + 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile - 2, toRank)
                 elif color == YELLOW and toFile < fromFile:  # kingside castle yellow
-                    pieceToBB = 1 << self.square(toFile - 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile - 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile + 2, toRank)
                 elif color == BLUE and toRank > fromRank:  # kingside castle blue
-                    pieceToBB = 1 << self.square(toFile, toRank + 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank + 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank - 2)
                 elif color == GREEN and toRank < fromRank:  # kingside castle green
-                    pieceToBB = 1 << self.square(toFile, toRank - 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank - 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank + 2)
                 elif color == RED and toFile < fromFile:  # queenside castle red
-                    pieceToBB = 1 << self.square(toFile - 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile - 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile + 3, toRank)
                 elif color == YELLOW and toFile > fromFile:  # queenside castle yellow
-                    pieceToBB = 1 << self.square(toFile + 2, toRank)
+                    pieceToBB = 1 << self.square(fromFile + 2, fromRank)
                     pieceToBB_ = 1 << self.square(toFile - 3, toRank)
                 elif color == BLUE and toRank < fromRank:  # queenside castle blue
-                    pieceToBB = 1 << self.square(toFile, toRank - 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank - 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank + 3)
                 elif color == GREEN and toRank > fromRank:  # queenside castle green
-                    pieceToBB = 1 << self.square(toFile, toRank + 2)
+                    pieceToBB = 1 << self.square(fromFile, fromRank + 2)
                     pieceToBB_ = 1 << self.square(toFile, toRank - 3)
                 else:  # invalid move
                     pieceToBB = 0
