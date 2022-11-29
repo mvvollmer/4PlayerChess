@@ -25,7 +25,7 @@ def generate_actors(input_strings):
       actor = Actor(rStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax':
-      mStrat = MinimaxStrategy(player_colors[i], 1)
+      mStrat = MinimaxStrategy(player_colors[i], 3)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   
