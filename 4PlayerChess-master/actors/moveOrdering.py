@@ -2,6 +2,9 @@
 # hopefully search the most valuable moves early (and therefore increasing # of pruned nodes)
 
 import random
+import sys
+sys.path.append('./4PlayerChess-master/')
+from gui.board import Board
 
 # -----------------------------------------------------------------------------------------------------------
 # MVV LVA Section
@@ -30,18 +33,20 @@ pieceToCaptureValueIndexMap = {
   'K': 5
 }
 
-def captureCoordsToValue(capture, boardData):
+def captureCoordsToValue(capture, board: Board):
   fromRank, fromFile, toRank, toFile = capture[0], capture[1], capture[2], capture[3]
-  attacker = boardData[fromRank][fromFile][1]
-  victim = boardData[toRank][toFile][1]
-  return capture_values[pieceToCaptureValueIndexMap[attacker], pieceToCaptureValueIndexMap[victim]]
+  fromIndex = board.fileRankToIndex(fromRank, fromFile)
+  toIndex = board.fileRankToIndex(toRank, toFile)
+  attacker = board.boardData[fromIndex][1]
+  victim = board.boardData[toIndex][1]
+  return capture_values[pieceToCaptureValueIndexMap[attacker]][pieceToCaptureValueIndexMap[victim]]
 
-def mvv_lva(captures, boardData):
+def mvv_lva(captures, board):
   """
   Given a list of possible capture moves [tuples of the form (fromRank, fromFile, toRank, toFile)], 
   return a sorted list by most valuable victim and least valuable attacker
   """
-  return sorted(captures, key=lambda x: captureCoordsToValue(x, boardData), reverse=True)
+  return sorted(captures, key=lambda x: captureCoordsToValue(x, board), reverse=True)
 
 # -----------------------------------------------------------------------------------------------------------
 # Killer Moves Heuristic Section
@@ -70,6 +75,15 @@ class KillerMoves():
     Check if a given move at a specific depth is a killer move
     """
     return move in self.storedMoves[depth]
+
+  def sortMoves(self, moves, depth):
+    sortedMoves = []
+    for mv in moves:
+      if self.isKillerMove(mv, depth):
+        sortedMoves.insert(0, mv)
+      else:
+        sortedMoves.append(mv)
+    return sortedMoves
 
 # -----------------------------------------------------------------------------------------------------------
 # Transposition Table Section

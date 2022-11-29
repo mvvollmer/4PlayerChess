@@ -344,3 +344,7 @@ class BoardStruct(Board):
               index += 1
       self.occupiedBB = self.pieceBB[RED] | self.pieceBB[BLUE] | self.pieceBB[YELLOW] | self.pieceBB[GREEN]
       self.emptyBB = ~self.occupiedBB
+
+  # def checkMate(self, color):
+  #   rv = super().checkMate(color)
+  #   return rv

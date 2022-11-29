@@ -55,6 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage(APP + '. Copyright (C) 2018, GammaDeltaII (GNU GPL-3.0-or-later)', 5000)
 
         self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
 
         # Create algorithm instance (view instance is already created in UI code)
         self.algorithm = Teams(actors)
@@ -155,8 +156,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.selectedSquare = 0
         self.moveHighlight = 0
 
+        self.algorithm.currentPlayerChanged.connect(self.delayed_game_loop)
         self.timer.timeout.connect(self.game_loop)
-        self.timer.start(10)
+        self.timer.start(100)
+
+    def delayed_game_loop(self):
+      timer = QTimer()
+      timer.setSingleShot(True)
+      timer.timeout.connect(self.game_loop)
+      self.timer.start(100)
 
     def game_loop(self):
       if self.algorithm.currentPlayer in self.algorithm.aiActorPos:
