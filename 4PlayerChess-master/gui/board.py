@@ -385,7 +385,6 @@ class Board(QObject):
 
     def legalMoves(self, piece, origin, color):
         """Pseudo-legal moves for piece type."""
-        print(self.evaluateBoard(color))
         if self.kingInCheck(color)[0]:
             return self.legalMovesInCheck(piece, origin, color)
         if color in (RED, YELLOW):
@@ -645,7 +644,7 @@ class Board(QObject):
     def attackers(self, file, rank, color):
         attackers = []
         kingSquareInt = self.square(file, rank)
-        if self.attacked(kingSquareInt, color):
+        if self.attackedV2(kingSquareInt, color):
            if color in (RED, YELLOW) :
                 opposite = (BLUE, GREEN)
                 for col in opposite:
@@ -716,7 +715,7 @@ class Board(QObject):
     def attackersPieces(self, file, rank, color):
         attackers = []
         kingSquareInt = self.square(file, rank)
-        if self.attacked(kingSquareInt, color):
+        if self.attackedV2(kingSquareInt, color):
            if color in (RED, YELLOW) :
                 opposite = (BLUE, GREEN)
                 for col in opposite:
@@ -808,11 +807,32 @@ class Board(QObject):
             return True
         return False
 
+    def attackedV2(self, square, color):
+        """Checks if a square is attacked by a player. MUST BE CALLED W/ OPPOSITE TEAM AS COLOR"""
+        if color in (BLUE, GREEN):
+            opposites = (RED, YELLOW)
+        else:
+            opposites = (BLUE, GREEN)
+
+        for opposite in opposites:
+            if self.pawnMoves(square, opposite, True) & self.pieceSet(opposite, PAWN):
+                return True
+            if self.knightMoves(square) & self.pieceSet(opposite, KNIGHT):
+                return True
+            if self.kingMoves(square) & self.pieceSet(opposite, KING):
+                return True
+            bishopMoves = self.maskBlockedSquares(self.bishopMoves(square), square)
+            if bishopMoves & (self.pieceSet(opposite, BISHOP) | self.pieceSet(opposite, QUEEN)):
+                return True
+            rookMoves = self.maskBlockedSquares(self.rookMoves(square), square)
+            if rookMoves & (self.pieceSet(opposite, ROOK) | self.pieceSet(opposite, QUEEN)):
+                return True
+        return False
 
     def defenders(self, file, rank, color):
         defenders = []
         kingSquareInt = self.square(file, rank)
-        if self.attacked(kingSquareInt, color):
+        if self.attackedV2(kingSquareInt, color):
            if color in (RED, YELLOW) :
                 opposite = (RED, YELLOW)
                 for col in opposite:
@@ -883,7 +903,7 @@ class Board(QObject):
     def defendersPieces(self, file, rank, color):
         attackers = []
         kingSquareInt = self.square(file, rank)
-        if self.attacked(kingSquareInt, color):
+        if self.attackedV2(kingSquareInt, color):
            if color in (RED, YELLOW) :
                 opposite = (RED, YELLOW)
                 for col in opposite:
