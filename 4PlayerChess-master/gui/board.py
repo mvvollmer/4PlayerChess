@@ -673,7 +673,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -701,12 +701,12 @@ class Board(QObject):
                        attackers.append(
                            self.getSquares(self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT))[0])
 
-                   bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   bishopMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt) , kingSquareInt)
                    if bishopMoves & (self.pieceSet(col, BISHOP)):
                        # if Bishop is attacking
                        attackers.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -744,7 +744,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(BISHOP)
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(QUEEN)
 
@@ -775,7 +775,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        attackers.append(BISHOP)
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(QUEEN)
 
@@ -872,7 +872,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -905,7 +905,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        defenders.append(self.getSquares(bishopMoves & self.pieceSet(col, BISHOP))[0])
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        defenders.append(self.getSquares(queenMoves & self.pieceSet(col, QUEEN))[0])
 
@@ -943,7 +943,7 @@ class Board(QObject):
                         # if Bishop is attacking
                         attackers.append(BISHOP)
 
-                    queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                    queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                     if queenMoves & (self.pieceSet(col, QUEEN)):
                         attackers.append(QUEEN)
 
@@ -974,7 +974,7 @@ class Board(QObject):
                        # if Bishop is attacking
                        attackers.append(BISHOP)
 
-                   queenMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                   queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
                    if queenMoves & (self.pieceSet(col, QUEEN)):
                        attackers.append(QUEEN)
 
@@ -1453,7 +1453,7 @@ class Board(QObject):
     def updateEnPassant(self, piece, color, fromFile, fromRank, toFile, toRank):
         # remove any previous enPassant flags since it is a new move for this color
         self.enPassant[color] = 0
-        if piece == PAWN and abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2:
+        if piece == PAWN and (abs(fromFile - toFile) == 2 or abs(fromRank - toRank) == 2):
             # add enpassant value
             offsetFile = 0
             offsetRank = 0
