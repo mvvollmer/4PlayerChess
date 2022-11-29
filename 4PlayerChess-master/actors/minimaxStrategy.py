@@ -6,17 +6,16 @@ sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
 from actors.strategy import Strategy
 from actors.moveOrdering import mvv_lva, KillerMoves
-from actors.evaluation import Evaluation
-
+from actors.evaluation import EvalBase
 
 
 class MinimaxStrategy(Strategy):
     # self.eval = evaluation()
-    def __init__(self, player, maxDepth):
+    def __init__(self, player: str, maxDepth: int, eval: EvalBase):
         super().__init__(player)
         self.maxDepth = maxDepth
         self.killerMoves = KillerMoves(maxDepth)
-        self.evaluation = Evaluation()
+        self.evaluation = eval
         self.nextColor = deque(['r', 'b', 'y', 'g'])
         while self.nextColor[0] != self.player:
           self.nextColor.rotate(-1)
