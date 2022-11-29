@@ -449,63 +449,50 @@ class Board(QObject):
             attackRays.append(self.attackedKingRay(attack, color))
             attackedSquares.append(self.getSquares(self.attackedKingRay(attack, color)))
 
+        attacks = len(attackersList)
+
         if piece == PAWN:
             moves = 0
             for move in self.getSquares(self.pawnMoves(origin, color) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == KNIGHT:
             moves = 0
             for move in self.getSquares(self.knightMoves(origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == BISHOP:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.bishopMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == ROOK:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.rookMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
         elif piece == QUEEN:
             moves = 0
             for move in self.getSquares(self.maskBlockedSquares(self.queenMoves(origin), origin) & ~friendly & pinMask):
-                attacks = len(attackedSquares)
-                blocks = 0
                 for atPath in attackedSquares:
                     if move in atPath or move in attackersList:
-                        blocks = blocks + 1
-                        if blocks == attacks:
+                        if attacks == 1:
                             moves = moves | (1 << self.square(move[0], move[1]))
             return moves
 
