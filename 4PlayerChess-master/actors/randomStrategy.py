@@ -16,6 +16,8 @@ class RandomStrategy(Strategy):
     moves, captures = self.getLegalMoves(board, piece, file, rank, self.player)
     poss_moves = moves + captures
     toFile, toRank = random.choice(poss_moves)
+    # print('random mover')
+    # print('official move:', file, rank, toFile, toRank)
     return file, rank, toFile, toRank
   def promote_pawn(self, board: Board, promote_space: None or tuple):
     return random.choice(['N', 'B', 'Q', 'R'])

@@ -5,7 +5,11 @@ from gui.boardStruct import BoardStruct
 
 RED, BLUE, YELLOW, GREEN, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(10)
 
-class Evaluation():
+class EvalBase():
+  def evaluateBoard(self, color: int, board: Board):
+    pass
+
+class Evaluation(EvalBase):
 
     def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
@@ -34,6 +38,24 @@ class Evaluation():
 
     # want low king saftey val, 0 = king fully protected, no attackers
     def kingSafetyVal(self, color: int, board: Board):
+        # print(color)
+        # print(board.boardData[:14])
+        # print(board.boardData[14:28])
+        # print(board.boardData[28:42])
+        # print(board.boardData[42:56])
+        # print(board.boardData[56:70])
+        # print(board.boardData[70:84])
+        # print(board.boardData[84:98])
+        # print(board.boardData[98:112])
+        # print(board.boardData[112:126])
+        # print(board.boardData[126:140])
+        # print(board.boardData[140:154])
+        # print(board.boardData[154:168])
+        # print(board.boardData[168:182])
+        # print(board.boardData[182:196])
+        # board.printBB(board.pieceSet(color, KING))
+        # print('in between')
+        # print(board.bitScanForward(board.pieceSet(color, KING)))
         kingSquare = board.bitScanForward(board.pieceSet(color, KING))
         kingFile, kingRank = board.fileRank(kingSquare)
         KSV = 5 * board.attackersValue(kingFile, kingRank, color)
@@ -49,23 +71,23 @@ class Evaluation():
                 KSV = KSV + 2 * board.attackersValue(unProtSquare[0], unProtSquare[1], color)
         return KSV
 
-
-    def eval2(self, color):
+class EvaluationV2(EvalBase):
+    def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
         if color in (RED, YELLOW):
-            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
                 return -10000
-            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
                 return 10000
-            evalValue =  self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW) - (
-                    self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN))
+            evalValue =  board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW) - (
+                    board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN))
         else:
-            if self.countLegalMovesForPlayer(RED) == 0 or self.countLegalMovesForPlayer(YELLOW) == 0:
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
                 return 10000
-            if self.countLegalMovesForPlayer(BLUE) == 0 or self.countLegalMovesForPlayer(GREEN) == 0:
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
                 return -10000
-            evalValue = self.countLegalMovesForPlayer(BLUE) + self.countLegalMovesForPlayer(GREEN) - (
-                    self.countLegalMovesForPlayer(RED) + self.countLegalMovesForPlayer(YELLOW))
+            evalValue = board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN) - (
+                    board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW))
         return evalValue
 
 
