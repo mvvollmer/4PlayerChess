@@ -61,13 +61,14 @@ class KillerMoves():
   def __init__(self, max_depth):
     self.storedMoves = []
     for _ in range(max_depth):
-      self.storedMoves.append((None, None))
+      self.storedMoves.append([])
 
   def store_move(self, move, depth):
     """
     Add a killer move (fromRank, fromFile, toRank, toFile) to the killer moves at given depth 
     """
-    self.storedMoves[depth].pop(0)
+    if len(self.storedMoves[depth]) == 2:
+      self.storedMoves[depth].pop(0)
     self.storedMoves[depth].append(move)
   
   def isKillerMove(self, move, depth):

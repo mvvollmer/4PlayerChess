@@ -71,13 +71,12 @@ class MinimaxStrategy(Strategy):
             eval, _ = self.negamax(self.nextColor[0], nextBoardState, depth + 1, -beta, -alpha)
             eval = -eval
             self.nextColor.rotate(1)
-            # TODO: Add killer move heuristic
             if eval > maxEval:
               maxEval = eval
               bestAction = action
               alpha = max(alpha, eval)
-              if beta <= alpha:
-                  # pretty sure killer move is added here
+              if alpha >= beta:
+                  self.killerMoves.store_move(bestAction, depth)
                   return maxEval, bestAction
         return maxEval, bestAction
 
