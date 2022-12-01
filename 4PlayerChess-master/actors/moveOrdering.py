@@ -1,6 +1,7 @@
 # This file is meant to be a collection of move ordering functions that can be used w/ alpha-beta pruning to 
 # hopefully search the most valuable moves early (and therefore increasing # of pruned nodes)
 
+from collections import defaultdict
 import random
 import sys
 sys.path.append('./4PlayerChess-master/')
@@ -85,6 +86,33 @@ class KillerMoves():
       else:
         sortedMoves.append(mv)
     return sortedMoves
+
+# -----------------------------------------------------------------------------------------------------------
+# History Heuristic Section
+# -----------------------------------------------------------------------------------------------------------
+
+class HistoryHeuristic():
+  """
+  Class to hold the data structure for storing good moves according to the history heuristic
+  Moves are of the form (fromRank, fromFile, toRank, toFile)
+  """
+  def __init__(self):
+    self.storedMoves = defaultdict(lambda: defaultdict(lambda: 0))
+
+  def store_move(self, move, depth):
+    """
+    Add a move (fromRank, fromFile, toRank, toFile) to the history 
+    """
+    self.storedMoves[(move[0], move[1])][(move[2], move[3])] += 2**depth
+  
+  def getHistoryHeuristic(self, move):
+    """
+    Check if a given move at a specific depth is a killer move
+    """
+    return self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+
+  def sortMoves(self, moves):
+    return sorted(moves, reverse=True, key=lambda x: self.getHistoryHeuristic(x))
 
 # -----------------------------------------------------------------------------------------------------------
 # Transposition Table Section

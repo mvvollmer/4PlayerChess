@@ -5,7 +5,7 @@ from collections import deque
 sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
 from actors.strategy import Strategy
-from actors.moveOrdering import mvv_lva, KillerMoves
+from actors.moveOrdering import mvv_lva, KillerMoves, HistoryHeuristic
 from actors.evaluation import EvalBase
 
 
@@ -14,6 +14,7 @@ class MinimaxStrategy(Strategy):
     def __init__(self, player: str, maxDepth: int, eval: EvalBase):
         super().__init__(player)
         self.maxDepth = maxDepth
+        self.history = HistoryHeuristic()
         self.killerMoves = KillerMoves(maxDepth)
         self.evaluation = eval
         self.nextColor = deque(['r', 'b', 'y', 'g'])
@@ -23,7 +24,7 @@ class MinimaxStrategy(Strategy):
     def negamax(self, color: str, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
         colorNum = board.colorMapping[color]
         boardCopy = self.getNewBoard(board)
-        if boardCopy.checkMate(colorNum) or depth >= self.maxDepth:
+        if boardCopy.checkMate(colorNum) or depth >= self.maxDepth: # since root is depth = 0
             # print('--- separator ---')
             # print(boardCopy.boardData[:14])
             # print(boardCopy.boardData[14:28])
@@ -43,6 +44,7 @@ class MinimaxStrategy(Strategy):
             return self.evaluation.evaluateBoard(colorNum, boardCopy), None
         moves, captures = self.getAllLegalMoves(color, boardCopy)
         orderedCaptures = mvv_lva(captures, boardCopy)
+        orderedMoves = self.history.sortMoves(moves)
         orderedMoves = self.killerMoves.sortMoves(moves, depth)
         actions = orderedCaptures + orderedMoves
         maxEval = float("-inf")
@@ -75,9 +77,10 @@ class MinimaxStrategy(Strategy):
               maxEval = eval
               bestAction = action
               alpha = max(alpha, eval)
-              if alpha >= beta:
-                  self.killerMoves.store_move(bestAction, depth)
-                  return maxEval, bestAction
+            if maxEval >= beta:
+                self.killerMoves.store_move(bestAction, depth)
+                self.history.store_move(bestAction, depth)
+                return maxEval, bestAction
         return maxEval, bestAction
 
     def make_move(self, board: Board):
