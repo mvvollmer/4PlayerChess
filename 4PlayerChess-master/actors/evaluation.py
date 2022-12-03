@@ -14,11 +14,19 @@ class Evaluation(EvalBase):
     def evaluateBoard(self, color: int, board: Board):
         evalValue = 0
         if color in (RED, YELLOW):
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
+                return -10000
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
+                return 10000
             evalValue = evalValue + (self.pieceValues(RED, board) + self.pieceValues(YELLOW, board)) - (
                     self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board))
             evalValue = evalValue + (self.kingSafetyVal(BLUE, board) + self.kingSafetyVal(GREEN, board)) - (
                     self.kingSafetyVal(RED, board) + self.kingSafetyVal(YELLOW, board))
         else:
+            if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
+                return 10000
+            if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
+                return -10000
             evalValue = evalValue + (self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board)) - (
                         self.pieceValues(RED, board) + self.pieceValues(YELLOW, board))
             evalValue = evalValue + (self.kingSafetyVal(RED, board) + self.kingSafetyVal(YELLOW, board)) - (
@@ -38,7 +46,7 @@ class Evaluation(EvalBase):
 
     # want low king saftey val, 0 = king fully protected, no attackers
     def kingSafetyVal(self, color: int, board: Board):
-        # print(color)
+        #print(color)
         # print(board.boardData[:14])
         # print(board.boardData[14:28])
         # print(board.boardData[28:42])
@@ -53,16 +61,18 @@ class Evaluation(EvalBase):
         # print(board.boardData[154:168])
         # print(board.boardData[168:182])
         # print(board.boardData[182:196])
-        # board.printBB(board.pieceSet(color, KING))
+        #board.printBB(board.pieceSet(color, KING))
         # print('in between')
         # print(board.bitScanForward(board.pieceSet(color, KING)))
+        KSV = 0
         kingSquare = board.bitScanForward(board.pieceSet(color, KING))
         kingFile, kingRank = board.fileRank(kingSquare)
-        KSV = 5 * board.attackersValue(kingFile, kingRank, color)
+
+        #KSV = KSV + board.attackersValue(kingFile, kingRank, color)
         # get squares around the king, if protected(occupied by friendly piece) + 0, if protected but attacked + attackers value
         # if unprotected + 10 if unprotected and attacked + 2 * attackers value
-        for protSquare in board.getProtectedSquaresAround(kingFile, kingRank, color):
-            KSV = KSV + board.attackersValue(protSquare[0], protSquare[1], color)
+        #for protSquare in board.getProtectedSquaresAround(kingFile, kingRank, color):
+            #KSV = KSV + board.attackersValue(protSquare[0], protSquare[1], color)
 
         for unProtSquare in board.getUnprotectedSquaresAround(kingFile, kingRank, color):
             if board.attackersValue(unProtSquare[0], unProtSquare[1], color) == 0:
