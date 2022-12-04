@@ -4,6 +4,7 @@ from actors.actor import Actor
 from actors.randomStrategy import RandomStrategy
 from actors.minimaxStrategy import MinimaxStrategy
 from actors.evaluation import Evaluation, EvaluationV2
+from actors.moveOrdering import GlobalHistoryHeuristic
 
 player_colors = ['r', 'b', 'y', 'g']
 
@@ -20,17 +21,18 @@ def generate_actors(input_strings):
   '''
   players = []
   player_strings = input_strings[1:]
+  globalHistory = GlobalHistoryHeuristic(12)
   for i, player in enumerate(player_strings):
     if player == 'random':
       rStrat = RandomStrategy(player_colors[i])
       actor = Actor(rStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax':
-      mStrat = MinimaxStrategy(player_colors[i], 1, Evaluation())
+      mStrat = MinimaxStrategy(player_colors[i], 4, Evaluation(), globalHistory)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax2':
-      mStrat = MinimaxStrategy(player_colors[i], 1, EvaluationV2())
+      mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   

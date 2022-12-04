@@ -91,28 +91,45 @@ class KillerMoves():
 # History Heuristic Section
 # -----------------------------------------------------------------------------------------------------------
 
-class HistoryHeuristic():
+class GlobalHistoryHeuristic():
   """
   Class to hold the data structure for storing good moves according to the history heuristic
   Moves are of the form (fromRank, fromFile, toRank, toFile)
+  Structure: fromRank, fromFile --> toRank, toFile --> (value, global depth)
   """
-  def __init__(self):
-    self.storedMoves = defaultdict(lambda: defaultdict(lambda: 0))
+  def __init__(self, refresh_age):
+    self.globalDepth = 0
+    self.refresh_age = refresh_age
+    self.storedMoves = defaultdict(lambda: defaultdict(lambda: (0, self.globalDepth)))
 
   def store_move(self, move, depth):
     """
     Add a move (fromRank, fromFile, toRank, toFile) to the history 
     """
-    self.storedMoves[(move[0], move[1])][(move[2], move[3])] += 2**depth
+    old_score = self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+    if old_score[1] + self.refresh_age >= self.globalDepth:
+      self.storedMoves[(move[0], move[1])][(move[2], move[3])] = (old_score[0] + 2**depth, self.globalDepth)
   
   def getHistoryHeuristic(self, move):
     """
     Check if a given move at a specific depth is a killer move
     """
-    return self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+    move_score = self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+    if move_score[1] + self.refresh_age >= self.globalDepth:
+      return move_score[0]
+    else:
+      # move is too old since last cut, we don't trust the evaluation value anymore
+      self.storedMoves[(move[0], move[1])][(move[2], move[3])] = (0, self.globalDepth)
+      return 0
 
   def sortMoves(self, moves):
     return sorted(moves, reverse=True, key=lambda x: self.getHistoryHeuristic(x))
+  
+  def incrementGlobalDepth(self):
+    self.globalDepth += 1
+  
+
+
 
 # -----------------------------------------------------------------------------------------------------------
 # Transposition Table Section

@@ -5,16 +5,16 @@ from collections import deque
 sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
 from actors.strategy import Strategy
-from actors.moveOrdering import mvv_lva, KillerMoves, HistoryHeuristic
+from actors.moveOrdering import mvv_lva, KillerMoves, GlobalHistoryHeuristic
 from actors.evaluation import EvalBase
 
 
 class MinimaxStrategy(Strategy):
     # self.eval = evaluation()
-    def __init__(self, player: str, maxDepth: int, eval: EvalBase):
+    def __init__(self, player: str, maxDepth: int, eval: EvalBase, globalHistory: GlobalHistoryHeuristic):
         super().__init__(player)
         self.maxDepth = maxDepth
-        self.history = HistoryHeuristic()
+        self.history = globalHistory
         self.killerMoves = KillerMoves(maxDepth)
         self.evaluation = eval
         self.nextColor = deque(['r', 'b', 'y', 'g'])
@@ -85,6 +85,8 @@ class MinimaxStrategy(Strategy):
 
     def make_move(self, board: Board):
         _, action = self.negamax(self.nextColor[0], board, 0)
+        # update global history depth
+        self.history.incrementGlobalDepth()
         # print('minimax mover')
         # print('official move:', *action)
         return action
