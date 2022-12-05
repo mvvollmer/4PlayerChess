@@ -1012,7 +1012,7 @@ class Teams(Algorithm):
                     self.currentMove = child
                     self.updateMoveText()  # Make current move selected in move list
         # Make the move
-        print(f'({fromFile}, {fromRank}, {toFile}, {toRank})')
+        # print(f'({fromFile}, {fromRank}, {toFile}, {toRank})')
         self.board.makeMove(fromFile, fromRank, toFile, toRank)
 
         # check for pawn promotion opportunity
