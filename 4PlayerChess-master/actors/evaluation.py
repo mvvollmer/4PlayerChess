@@ -15,25 +15,38 @@ class Evaluation(EvalBase):
         evalValue = 0
         if color in (RED, YELLOW):
             if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
-                return -10000
+                return -100000
             if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
-                return 10000
-            evalValue = evalValue + (self.pieceValues(RED, board) + self.pieceValues(YELLOW, board)) - (
+                return 100000
+            evalValue = evalValue + (self.curPieceValues(RED, board) + self.curPieceValues(YELLOW, board)) - (
                     self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board))
             evalValue = evalValue + (self.kingSafetyVal(BLUE, board) + self.kingSafetyVal(GREEN, board)) - (
                     self.kingSafetyVal(RED, board) + self.kingSafetyVal(YELLOW, board))
+            moves = board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW) - (
+                    board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN))
         else:
             if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:
-                return 10000
+                return 100000
             if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
-                return -10000
+                return -100000
             evalValue = evalValue + (self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board)) - (
                         self.pieceValues(RED, board) + self.pieceValues(YELLOW, board))
             evalValue = evalValue + (self.kingSafetyVal(RED, board) + self.kingSafetyVal(YELLOW, board)) - (
                         self.kingSafetyVal(BLUE, board) + self.kingSafetyVal(GREEN, board))
+            moves = board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN) - (
+                    board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW))
 
-        return evalValue
+        return max(moves, evalValue)
 
+
+    def curPieceValues(self, color: int, board: Board): # needs work
+        totPVal = 0
+        totPVal = totPVal + (board.expNumPieces(PAWN, color) * 10)
+        totPVal = totPVal + (board.expNumPieces(KNIGHT, color) * 30)
+        totPVal = totPVal + (board.expNumPieces(BISHOP, color) * 35)
+        totPVal = totPVal + (board.expNumPieces(ROOK, color) * 50)
+        totPVal = totPVal + (board.expNumPieces(QUEEN, color) * 90)
+        return totPVal
 
     def pieceValues(self, color: int, board: Board):
         totPVal = 0
@@ -43,6 +56,7 @@ class Evaluation(EvalBase):
         totPVal = totPVal + (len(board.getSquares(board.pieceSet(color, ROOK))) * 50)
         totPVal = totPVal + (len(board.getSquares(board.pieceSet(color, QUEEN))) * 90)
         return totPVal
+
 
     # want low king saftey val, 0 = king fully protected, no attackers
     def kingSafetyVal(self, color: int, board: Board):
@@ -89,7 +103,7 @@ class EvaluationV2(EvalBase):
                 return -10000
             if board.countLegalMovesForPlayer(BLUE) == 0 or board.countLegalMovesForPlayer(GREEN) == 0:
                 return 10000
-            evalValue =  board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW) - (
+            evalValue = board.countLegalMovesForPlayer(RED) + board.countLegalMovesForPlayer(YELLOW) - (
                     board.countLegalMovesForPlayer(BLUE) + board.countLegalMovesForPlayer(GREEN))
         else:
             if board.countLegalMovesForPlayer(RED) == 0 or board.countLegalMovesForPlayer(YELLOW) == 0:

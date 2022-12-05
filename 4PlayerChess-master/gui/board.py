@@ -371,6 +371,9 @@ class Board(QObject):
     def moreAttackersThanDefenders(self, file, rank, color):
         return len(self.attackersPieces(file, rank, color)) > len(self.defendersPieces(file, rank, color))
 
+    def attackersAndDefenders(self, file, rank, color):
+        return [self.attackersPieces(file, rank, color) , (self.defendersPieces(file, rank, color))]
+
     def attackersValue(self, file, rank, color):
         AV = 0
         attackPieces = self.attackersPieces(file, rank, color)
@@ -652,16 +655,8 @@ class Board(QObject):
             opposite = (BLUE, GREEN)
             if self.attacked(kingSquareInt, BLUE) or self.attacked(kingSquareInt, GREEN):
               for col in opposite:
-                  if col == RED:
-                      opp = YELLOW
-                  elif col == YELLOW:
-                      opp = RED
-                  elif col == BLUE:
-                      opp = GREEN
-                  elif col == GREEN:
-                      opp = BLUE
-                  if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                      attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                  if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                      attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                   rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                   if rookMoves & self.pieceSet(col, ROOK):
                       # if rook is attacking
@@ -685,17 +680,9 @@ class Board(QObject):
             opposite = (RED, YELLOW)
             if self.attacked(kingSquareInt, RED) or self.attacked(kingSquareInt, YELLOW):
               for col in opposite:
-                  if col == RED:
-                      opp = YELLOW
-                  elif col == YELLOW:
-                      opp = RED
-                  elif col == BLUE:
-                      opp = GREEN
-                  elif col == GREEN:
-                      opp = BLUE
-                  if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+                  if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
                       attackers.append(
-                          self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                          self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                   rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                   if rookMoves & self.pieceSet(col, ROOK):
                       # if rook is attacking
@@ -728,16 +715,8 @@ class Board(QObject):
            if color in (RED, YELLOW) :
                 opposite = (BLUE, GREEN)
                 for col in opposite:
-                    if col == RED:
-                        opp = YELLOW
-                    elif col == YELLOW:
-                        opp = RED
-                    elif col == BLUE:
-                        opp = GREEN
-                    elif col == GREEN:
-                        opp = BLUE
-                    if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                        attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                    if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                        attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                     rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                     if rookMoves & self.pieceSet(col, ROOK):
                         # if rook is attacking
@@ -764,15 +743,7 @@ class Board(QObject):
            else:
                opposite = (RED, YELLOW)
                for col in opposite:
-                   if col == RED:
-                       opp = YELLOW
-                   elif col == YELLOW:
-                       opp = RED
-                   elif col == BLUE:
-                       opp = GREEN
-                   elif col == GREEN:
-                       opp = BLUE
-                   if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+                   if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
                        attackers.append(PAWN)
                    rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                    if rookMoves & self.pieceSet(col, ROOK):
@@ -864,16 +835,8 @@ class Board(QObject):
            if color in (RED, YELLOW) :
                 opposite = (RED, YELLOW)
                 for col in opposite:
-                    if col == RED:
-                        opp = YELLOW
-                    elif col == YELLOW:
-                        opp = RED
-                    elif col == BLUE:
-                        opp = GREEN
-                    elif col == GREEN:
-                        opp = BLUE
-                    if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                        defenders.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                    if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                        defenders.append(self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                     rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                     if rookMoves & self.pieceSet(col, ROOK):
                         # if rook is attacking
@@ -899,18 +862,10 @@ class Board(QObject):
            else:
                 opposite = (BLUE, GREEN)
                 for col in opposite:
-                    if col == RED:
-                        opp = YELLOW
-                    elif col == YELLOW:
-                        opp = RED
-                    elif col == BLUE:
-                        opp = GREEN
-                    elif col == GREEN:
-                        opp = BLUE
 
-                    if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+                    if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
                         defenders.append(
-                            self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+                            self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                     rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                     if rookMoves & self.pieceSet(col, ROOK):
                         # if rook is attacking
@@ -944,16 +899,9 @@ class Board(QObject):
            if color in (RED, YELLOW) :
                 opposite = (RED, YELLOW)
                 for col in opposite:
-                    if col == RED:
-                        opp = YELLOW
-                    elif col == YELLOW:
-                        opp = RED
-                    elif col == BLUE:
-                        opp = GREEN
-                    elif col == GREEN:
-                        opp = BLUE
-                    if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
-                        attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN))[0])
+
+                    if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                        attackers.append(self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
                     rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                     if rookMoves & self.pieceSet(col, ROOK):
                         # if rook is attacking
@@ -978,15 +926,8 @@ class Board(QObject):
            else:
                opposite = (BLUE, GREEN)
                for col in opposite:
-                   if col == RED:
-                       opp = YELLOW
-                   elif col == YELLOW:
-                       opp = RED
-                   elif col == BLUE:
-                       opp = GREEN
-                   elif col == GREEN:
-                       opp = BLUE
-                   if self.pawnMoves(kingSquareInt, opp, True) & self.pieceSet(col, PAWN):
+
+                   if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
                        attackers.append(PAWN)
                    rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
                    if rookMoves & self.pieceSet(col, ROOK):
@@ -1012,6 +953,47 @@ class Board(QObject):
 
 
         return attackers
+
+
+    def value(self, file, rank, color):
+        AV = 0
+        attackPieces = self.attackersPieces(file, rank, color)
+        dPieces = self.defendersPieces(file, rank, color)
+        for piece in attackPieces:
+            if piece == PAWN:
+                AV = AV + 10
+            if piece == KNIGHT:
+                AV = AV + 30
+            if piece == BISHOP:
+                AV = AV + 35
+            if piece == ROOK:
+                AV = AV + 50
+            if piece == QUEEN:
+                AV = AV + 90
+        for dPiece in dPieces:
+            if dPiece == PAWN:
+                AV = AV - 10
+            if dPiece == KNIGHT:
+                AV = AV - 30
+            if dPiece == BISHOP:
+                AV = AV - 35
+            if dPiece == ROOK:
+                AV = AV - 50
+            if dPiece == QUEEN:
+                AV = AV - 90
+        return AV
+
+    def expNumPieces(self, piece, color):
+        squares = self.getSquares(self.pieceSet(color, piece))
+        expPieces = []
+        for square in squares:
+            if not self.moreAttackersThanDefenders(square[0], square[1], color) and self.value(square[0], square[1], color) > 0:
+                expPieces.append(square)
+        return len(expPieces)
+
+
+
+
 
     def kingInCheck(self, color):
         """Checks if a player's king is in check."""
