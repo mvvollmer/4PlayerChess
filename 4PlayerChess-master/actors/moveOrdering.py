@@ -1,6 +1,7 @@
 # This file is meant to be a collection of move ordering functions that can be used w/ alpha-beta pruning to 
 # hopefully search the most valuable moves early (and therefore increasing # of pruned nodes)
 
+from collections import defaultdict
 import random
 import sys
 sys.path.append('./4PlayerChess-master/')
@@ -61,13 +62,14 @@ class KillerMoves():
   def __init__(self, max_depth):
     self.storedMoves = []
     for _ in range(max_depth):
-      self.storedMoves.append((None, None))
+      self.storedMoves.append([])
 
   def store_move(self, move, depth):
     """
     Add a killer move (fromRank, fromFile, toRank, toFile) to the killer moves at given depth 
     """
-    self.storedMoves[depth].pop(0)
+    if len(self.storedMoves[depth]) == 2:
+      self.storedMoves[depth].pop(0)
     self.storedMoves[depth].append(move)
   
   def isKillerMove(self, move, depth):
@@ -86,6 +88,52 @@ class KillerMoves():
     return sortedMoves
 
 # -----------------------------------------------------------------------------------------------------------
+# History Heuristic Section
+# -----------------------------------------------------------------------------------------------------------
+
+class GlobalHistoryHeuristic():
+  """
+  Class to hold the data structure for storing good moves according to the history heuristic
+  Moves are of the form (fromRank, fromFile, toRank, toFile)
+  Structure: fromRank, fromFile --> toRank, toFile --> (value, global depth)
+  """
+  def __init__(self, refresh_age):
+    self.globalDepth = 0
+    self.refresh_age = refresh_age
+    self.storedMoves = defaultdict(lambda: defaultdict(lambda: (0, self.globalDepth)))
+
+  def store_move(self, move, depth):
+    """
+    Add a move (fromRank, fromFile, toRank, toFile) to the history 
+    """
+    old_score = self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+    if old_score[1] + self.refresh_age >= self.globalDepth:
+      self.storedMoves[(move[0], move[1])][(move[2], move[3])] = (old_score[0] + 2**depth, self.globalDepth)
+  
+  def getHistoryHeuristic(self, move):
+    """
+    Check if a given move at a specific depth is a killer move
+    """
+    move_score = self.storedMoves[(move[0], move[1])][(move[2], move[3])]
+    if move_score[1] + self.refresh_age >= self.globalDepth:
+      return move_score[0]
+    else:
+      # move is too old since last cut, we don't trust the evaluation value anymore
+      self.storedMoves[(move[0], move[1])][(move[2], move[3])] = (0, self.globalDepth)
+      return 0
+
+  def sortMoves(self, moves):
+    return sorted(moves, reverse=True, key=lambda x: self.getHistoryHeuristic(x))
+  
+  def incrementGlobalDepth(self):
+    self.globalDepth += 1
+
+  # TODO: add function that clears out old entries
+  
+
+
+
+# -----------------------------------------------------------------------------------------------------------
 # Transposition Table Section
 # -----------------------------------------------------------------------------------------------------------
 
@@ -93,17 +141,18 @@ class TableNode():
   """
   Nodes Values for Hashes in the Transposition Table
   """
-  def __init__(self, nodeType, score, depth):
+  def __init__(self, nodeType, score, numPieces, bestMove):
     """
     Create node
     Parameters:
-     - nodeType: 'PV' | 'ALL' | 'CUT'
+     - nodeType: 'exact' | 'upper' | 'lower'
      - score: evaluation score
      - depth: search depth
     """
     self.nodeType = nodeType
     self.score = score
-    self.depth = depth
+    self.numPieces = numPieces
+    self.bestMove = bestMove
 
 class TranspositionTable():
   """
@@ -112,6 +161,7 @@ class TranspositionTable():
   def __init__(self):
     self.zTable = [[[random.randint(1, 2**64 - 1) for _ in range(24)] for _ in range(14)] for _ in range(14)]
     self.storedPositions = {}
+    self.globalDepth = 0
   
   def pieceToIndex(self, piece):
     pieces = [
@@ -122,79 +172,89 @@ class TranspositionTable():
     ]
     return pieces.index(piece) if piece in pieces else -1
   
-  def computeHash(self, boardData):
+  def computeHash(self, board):
     """
     Given the boardData in a board, return the key hash value
     """
     h = 0
     for i in range(14):
       for j in range(14):
-        piece = self.pieceToIndex(boardData[i][j])
+        index = board.fileRankToIndex(i, j)
+        piece = self.pieceToIndex(board.boardData[index])
         if piece != 1:
           h ^= self.zTable[i][j][piece]
   
-  def updateHash(self, hash, boardData, fromRank, fromFile, toRank, toFile, enPassant, castling):
-    """
-    Given a hash representing a previous board state, return an updated hash for the new boardData
-    Parameters:
-     - hash: the hash representing the previous board state
-     - boardData: the boardData list from board.py
-     - fromRank, fromFile, toRank, toFile: the move coords
-     - enPassant: boolean for if this move is an enpassant
-     - castling: boolean for if this move is a castling move
-    """
-    movedPiece = self.pieceToIndex(boardData[fromRank][fromFile])
-    capturedPiece = self.pieceToIndex(boardData[toRank][toFile])
-    if castling:
-      # remove pieces from hash
-      hash ^= self.zTable[fromRank][fromFile][movedPiece]
-      hash ^= self.zTable[toRank][toFile][capturedPiece]
-      # add pieces to hash but flipped (since this is a castling move)
-      hash ^= self.zTable[fromRank][fromFile][capturedPiece]
-      hash ^= self.zTable[toRank][toFile][movedPiece]
-    elif enPassant:
-      # remove pawn from hash
-      hash ^= self.zTable[fromRank][fromFile][movedPiece]
-      # move pawn to new spot
-      hash ^= self.zTable[toRank][toFile][movedPiece]
-      # find square to remove the enpassanted pawn from
-      offsetFile = 0
-      offsetRank = 0
-      pawnStr = boardData[fromRank][fromFile]
-      if pawnStr[0] == 'r':
-        offsetRank = 1
-      if pawnStr[0] == 'b':
-        offsetFile = 1
-      if pawnStr[0] == 'y':
-        offsetRank = -1
-      if pawnStr[0] == 'g':
-        offsetFile = -1
-      # remove the enpassanted pawn
-      removedPiece = self.pieceToIndex(boardData[fromRank + offsetRank][fromFile + offsetFile])
-      hash ^= self.zTable[fromRank + offsetRank][fromFile + offsetFile][removedPiece]
-    else:
-      if capturedPiece != -1:
-        # remove captured piece from hash
-        hash ^= self.zTable[toRank][toFile][capturedPiece]
-      # remove movedPiece from starting location in hash and add it to new location
-      hash ^= self.zTable[fromRank][fromFile][movedPiece]
-      hash ^= self.zTable[toRank][toFile][movedPiece]
-    return hash
+  # def updateHash(self, hash, boardData, fromRank, fromFile, toRank, toFile, enPassant, castling):
+  #   """
+  #   Given a hash representing a previous board state, return an updated hash for the new boardData
+  #   Parameters:
+  #    - hash: the hash representing the previous board state
+  #    - boardData: the boardData list from board.py
+  #    - fromRank, fromFile, toRank, toFile: the move coords
+  #    - enPassant: boolean for if this move is an enpassant
+  #    - castling: boolean for if this move is a castling move
+  #   """
+  #   movedPiece = self.pieceToIndex(boardData[fromRank][fromFile])
+  #   capturedPiece = self.pieceToIndex(boardData[toRank][toFile])
+  #   if castling:
+  #     # remove pieces from hash
+  #     hash ^= self.zTable[fromRank][fromFile][movedPiece]
+  #     hash ^= self.zTable[toRank][toFile][capturedPiece]
+  #     # add pieces to hash but flipped (since this is a castling move)
+  #     hash ^= self.zTable[fromRank][fromFile][capturedPiece]
+  #     hash ^= self.zTable[toRank][toFile][movedPiece]
+  #   elif enPassant:
+  #     # remove pawn from hash
+  #     hash ^= self.zTable[fromRank][fromFile][movedPiece]
+  #     # move pawn to new spot
+  #     hash ^= self.zTable[toRank][toFile][movedPiece]
+  #     # find square to remove the enpassanted pawn from
+  #     offsetFile = 0
+  #     offsetRank = 0
+  #     pawnStr = boardData[fromRank][fromFile]
+  #     if pawnStr[0] == 'r':
+  #       offsetRank = 1
+  #     if pawnStr[0] == 'b':
+  #       offsetFile = 1
+  #     if pawnStr[0] == 'y':
+  #       offsetRank = -1
+  #     if pawnStr[0] == 'g':
+  #       offsetFile = -1
+  #     # remove the enpassanted pawn
+  #     removedPiece = self.pieceToIndex(boardData[fromRank + offsetRank][fromFile + offsetFile])
+  #     hash ^= self.zTable[fromRank + offsetRank][fromFile + offsetFile][removedPiece]
+  #   else:
+  #     if capturedPiece != -1:
+  #       # remove captured piece from hash
+  #       hash ^= self.zTable[toRank][toFile][capturedPiece]
+  #     # remove movedPiece from starting location in hash and add it to new location
+  #     hash ^= self.zTable[fromRank][fromFile][movedPiece]
+  #     hash ^= self.zTable[toRank][toFile][movedPiece]
+  #   return hash
 
-  def storePosition(self, hash, nodeType, score, depth):
+  def storePosition(self, hash, nodeType, score, numPieces, move):
     """
     Store the position calculations for a given board state hash
     Parameters:
      - hash: numerical hash
      - nodeType: 'PV' | 'ALL' | 'CUT'
      - score: evaluation score
-     - depth: search depth
+     - numPieces: the number of pieces on the board
+     - move: the best move
     """
-    storedNode = TableNode(nodeType, score, depth)
+    storedNode = TableNode(nodeType, score, numPieces, move)
     self.storedPositions[hash] = storedNode
   
   def getPositionCalculations(self, hash):
     """
     Return the saved node calculation for the given hashed position of the board
     """
-    return self.storedPositions[hash]
+    return self.storedPositions[hash] if hash in self.storedPositions else None
+  
+  def cleanTable(self, numPieces):
+    """
+    Remove any entries that have more pieces than the current number of pieces on the board
+    """
+    for k, v in list(self.storedPositions.items()):
+      if v.numPieces != numPieces:
+        del self.storedPositions[k]
