@@ -113,4 +113,7 @@ class MinimaxStrategy(Strategy):
         # print('minimax mover')
         # print('official move:', *action)
         return action
+    
+    def promote_pawn(self, board: Board, promote_space: None or tuple):
+      return 'Q'
 

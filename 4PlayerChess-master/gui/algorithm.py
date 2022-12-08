@@ -549,14 +549,15 @@ class Algorithm(QObject):
         return False
     
     def promoteValue(self, piece):
-        color = self.playerQueue[3]
+        color = self.playerQueue[0]
         charPiece = f'{color}{piece}'
         piece, color = self.board.getPieceColor(charPiece)
         if not self.board.checkMate(color) and self.promoteSpace is not None:
             self.board.setData(self.promoteSpace[0], self.promoteSpace[1], charPiece)
             self.promoteSpace = None
+            self.playerQueue.rotate(-1)
             self.setCurrentPlayer(self.playerQueue[0])
-                # Update FEN4 and PGN4
+            # Update FEN4 and PGN4
 
     def getPgn4(self):
         """Generates PGN4 from current game."""
@@ -1053,12 +1054,13 @@ class Teams(Algorithm):
         # Store FEN4 in current node
         self.currentMove.fen4 = fen4
 
-        # Rotate player queue and get next player from the queue (first element)
-        self.playerQueue.rotate(-1)
-        self.setCurrentPlayer(self.playerQueue[0])
         if requestPromote:
           self.promoteSpace = (toFile, toRank)
           self.setCurrentPlayer(self.NoPlayer)
+        else:
+          # Rotate player queue and get next player from the queue (first element)
+          self.playerQueue.rotate(-1)
+          self.setCurrentPlayer(self.playerQueue[0])
 
         return True
 
