@@ -1,4 +1,4 @@
-bitboard == 0 on king ray search
+bitboard == 0 on king ray search [should be fixed]
 pawn mate error: check if pawns are being used correctly when being used for mates
 enpassant error: somehow pawns can perform an enpassant on empty spaces. 
 mvv_lva: captures error: sometimes board will try to index out of index captures
