@@ -554,6 +554,8 @@ class Algorithm(QObject):
         piece, color = self.board.getPieceColor(charPiece)
         if not self.board.checkMate(color) and self.promoteSpace is not None:
             self.board.setData(self.promoteSpace[0], self.promoteSpace[1], charPiece)
+            self.board.pieceBB[4] ^= 1 << self.board.square(self.promoteSpace[0], self.promoteSpace[1])
+            self.board.pieceBB[piece] ^= 1 << self.board.square(self.promoteSpace[0], self.promoteSpace[1])
             self.promoteSpace = None
             self.playerQueue.rotate(-1)
             self.setCurrentPlayer(self.playerQueue[0])
