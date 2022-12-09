@@ -5,15 +5,17 @@ from collections import deque
 sys.path.append('./4PlayerChess-master/')
 from gui.board import Board
 from actors.strategy import Strategy
-from actors.moveOrdering import mvv_lva, KillerMoves
+from actors.moveOrdering import mvv_lva, KillerMoves, GlobalHistoryHeuristic, TranspositionTable
 from actors.evaluation import EvalBase
 
 
 class MinimaxStrategy(Strategy):
     # self.eval = evaluation()
-    def __init__(self, player: str, maxDepth: int, eval: EvalBase):
+    def __init__(self, player: str, maxDepth: int, eval: EvalBase, globalHistory: GlobalHistoryHeuristic, globalTT: TranspositionTable):
         super().__init__(player)
         self.maxDepth = maxDepth
+        self.history = globalHistory
+        self.tt = globalTT
         self.killerMoves = KillerMoves(maxDepth)
         self.evaluation = eval
         self.nextColor = deque(['r', 'b', 'y', 'g'])
@@ -21,9 +23,21 @@ class MinimaxStrategy(Strategy):
           self.nextColor.rotate(-1)
 
     def negamax(self, color: str, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
-        colorNum = board.colorMapping[color]
+        alphaOrig = alpha
         boardCopy = self.getNewBoard(board)
-        if boardCopy.checkMate(colorNum) or depth >= self.maxDepth:
+        zhash = self.tt.computeHash(boardCopy)
+        node = self.tt.getPositionCalculations(zhash)
+        if node != None:
+          if node.nodeType == 'exact':
+            return node.score, node.bestMove
+          if node.nodeType == 'lower':
+            alpha = max(alpha, node.score)
+          if node.nodeType == 'upper':
+            beta = min(beta, node.score)
+          if alpha >= beta:
+            return node.score, node.bestMove
+        colorNum = board.colorMapping[color]
+        if boardCopy.checkMate(colorNum) or depth >= self.maxDepth: # since root is depth = 0
             # print('--- separator ---')
             # print(boardCopy.boardData[:14])
             # print(boardCopy.boardData[14:28])
@@ -43,6 +57,7 @@ class MinimaxStrategy(Strategy):
             return self.evaluation.evaluateBoard(colorNum, boardCopy), None
         moves, captures = self.getAllLegalMoves(color, boardCopy)
         orderedCaptures = mvv_lva(captures, boardCopy)
+        orderedMoves = self.history.sortMoves(moves)
         orderedMoves = self.killerMoves.sortMoves(moves, depth)
         actions = orderedCaptures + orderedMoves
         maxEval = float("-inf")
@@ -71,18 +86,30 @@ class MinimaxStrategy(Strategy):
             eval, _ = self.negamax(self.nextColor[0], nextBoardState, depth + 1, -beta, -alpha)
             eval = -eval
             self.nextColor.rotate(1)
-            # TODO: Add killer move heuristic
             if eval > maxEval:
               maxEval = eval
               bestAction = action
               alpha = max(alpha, eval)
-              if beta <= alpha:
-                  # pretty sure killer move is added here
-                  return maxEval, bestAction
+            if alpha >= beta:
+                self.killerMoves.store_move(bestAction, depth)
+                self.history.store_move(bestAction, depth)
+                if maxEval <= alphaOrig:
+                  nodeType = 'upper'
+                elif maxEval >= beta:
+                  nodeType = 'lower'
+                else:
+                  nodeType = 'exact'
+                numPieces = len(list(filter(lambda x: x != ' ', boardCopy.boardData)))
+                self.tt.storePosition(zhash, nodeType, maxEval, numPieces, bestAction)
+                if random.random() > 0.8:
+                  self.tt.cleanTable(numPieces)
+                return maxEval, bestAction
         return maxEval, bestAction
 
     def make_move(self, board: Board):
         _, action = self.negamax(self.nextColor[0], board, 0)
+        # update global history depth
+        self.history.incrementGlobalDepth()
         # print('minimax mover')
         # print('official move:', *action)
         return action
