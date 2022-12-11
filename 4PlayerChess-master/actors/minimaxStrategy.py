@@ -25,9 +25,26 @@ class MinimaxStrategy(Strategy):
     def negamax(self, color: str, board: Board, depth: int, alpha: float = float("-inf"), beta: float = float("inf")):
         alphaOrig = alpha
         boardCopy = self.getNewBoard(board)
+        # print('-- starting position --')
+        # print(boardCopy.boardData[:14])
+        # print(boardCopy.boardData[14:28])
+        # print(boardCopy.boardData[28:42])
+        # print(boardCopy.boardData[42:56])
+        # print(boardCopy.boardData[56:70])
+        # print(boardCopy.boardData[70:84])
+        # print(boardCopy.boardData[84:98])
+        # print(boardCopy.boardData[98:112])
+        # print(boardCopy.boardData[112:126])
+        # print(boardCopy.boardData[126:140])
+        # print(boardCopy.boardData[140:154])
+        # print(boardCopy.boardData[154:168])
+        # print(boardCopy.boardData[168:182])
+        # print(boardCopy.boardData[182:196])
         zhash = self.tt.computeHash(boardCopy)
         node = self.tt.getPositionCalculations(zhash)
         if node != None:
+          # print('found zhash', zhash)
+          # print('Using node:', node.nodeType, node.score, node.bestMove)
           if node.nodeType == 'exact':
             return node.score, node.bestMove
           if node.nodeType == 'lower':
@@ -101,6 +118,8 @@ class MinimaxStrategy(Strategy):
                   nodeType = 'exact'
                 numPieces = len(list(filter(lambda x: x != ' ', boardCopy.boardData)))
                 self.tt.storePosition(zhash, nodeType, maxEval, numPieces, bestAction)
+                # print('adding position zhash', zhash)
+                # print('storing position:', nodeType, maxEval, numPieces, bestAction)
                 if random.random() > 0.8:
                   self.tt.cleanTable(numPieces)
                 return maxEval, bestAction
