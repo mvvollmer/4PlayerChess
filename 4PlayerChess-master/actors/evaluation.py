@@ -130,7 +130,7 @@ class EvalForDepth4(EvalBase):
         greenMoves = greenMovesRBQ[0]
         moveList = [redMovesRBQ, blueMovesRBQ, yellowMovesRBQ, greenMovesRBQ]
         curMoves = moveList[color]
-        if curMoves[1] == 0:
+        if curMoves[1] == 0 and curMoves[0] > 15:
             return 0
         if color in (RED, YELLOW):
             if redMoves == 0 or yellowMoves == 0:
@@ -141,10 +141,11 @@ class EvalForDepth4(EvalBase):
             evalValue = evalValue + (self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board)) - (
                     self.pieceValues(RED, board) + self.pieceValues(YELLOW, board))
             if evalValue == 0:
-                evalValue = 10 * (board.getNumAttackedSquares(BLUE) + board.getNumAttackedSquares(GREEN) - (
+                evalValue = 100 * (board.getNumAttackedSquares(BLUE) + board.getNumAttackedSquares(GREEN) - (
                         board.getNumAttackedSquares(RED) + board.getNumAttackedSquares(YELLOW)
                 ))
-            return evalValue + (redMoves + yellowMoves - (blueMoves + greenMoves))
+            evalValue = evalValue + (curMoves[0] / 10)
+            return evalValue + (redMoves + yellowMoves - (blueMoves + greenMoves))/2
         else:
             if redMoves == 0 or yellowMoves == 0:
                 return 100000
@@ -154,12 +155,12 @@ class EvalForDepth4(EvalBase):
             evalValue = evalValue + (self.pieceValues(BLUE, board) + self.pieceValues(GREEN, board)) - (
                     self.pieceValues(RED, board) + self.pieceValues(YELLOW, board))
             if evalValue == 0:
-                evalValue = 50 * (board.getNumAttackedSquares(RED) + board.getNumAttackedSquares(YELLOW) - (
+                evalValue = 100 * (board.getNumAttackedSquares(RED) + board.getNumAttackedSquares(YELLOW) - (
                         board.getNumAttackedSquares(BLUE) + board.getNumAttackedSquares(GREEN)
                 ))
 
-            evalValue = evalValue + (curMoves/10)
-            return evalValue + (blueMoves + greenMoves - (yellowMoves + redMoves))
+            evalValue = evalValue + (curMoves[0]/10)
+            return evalValue + (blueMoves + greenMoves - (yellowMoves + redMoves))/2
         return evalValue
 
 

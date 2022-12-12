@@ -391,11 +391,11 @@ class Board(QObject):
             squares = [(file - 1, rank - 1), (file - 1, rank), (file - 1, rank + 1),
                        (file, rank - 1), (file, rank + 1),
                        (file + 1, rank - 1), (file + 1, rank), (file + 1, rank + 1)]
-        attackers = 0
+        attackers = []
         for square in squares:
-            if self.attackedV2(self.square(square[0], square[1]), color):
-                attackers = attackers + len(self.attackersPiecesV2(square[0], square[1], color))
-        return attackers
+            if self.moreAttackersThanDefenders(square[0], square[1], color):
+                attackers.append(square)
+        return len(attackers)
 
     def moreAttackersThanDefenders(self, file, rank, color):
         return len(self.attackersPieces(file, rank, color)) > len(self.defendersPieces(file, rank, color))
