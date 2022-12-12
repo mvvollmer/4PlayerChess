@@ -391,11 +391,11 @@ class Board(QObject):
             squares = [(file - 1, rank - 1), (file - 1, rank), (file - 1, rank + 1),
                        (file, rank - 1), (file, rank + 1),
                        (file + 1, rank - 1), (file + 1, rank), (file + 1, rank + 1)]
-        attacked = []
+        attackers = 0
         for square in squares:
             if self.attackedV2(self.square(square[0], square[1]), color):
-                attacked.append(square)
-        return len(attacked)
+                attackers = attackers + len(self.attackersPiecesV2(square[0], square[1], color))
+        return attackers
 
     def moreAttackersThanDefenders(self, file, rank, color):
         return len(self.attackersPieces(file, rank, color)) > len(self.defendersPieces(file, rank, color))
@@ -798,6 +798,66 @@ class Board(QObject):
 
         return attackers
 
+    def attackersPiecesV2(self, file, rank, color):
+        attackers = []
+        kingSquareInt = self.square(file, rank)
+        if color in (RED, YELLOW):
+            opposite = (BLUE, GREEN)
+            for col in opposite:
+                if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                    attackers.append(
+                        self.getSquares(self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN))[0])
+                rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+                if rookMoves & self.pieceSet(col, ROOK):
+                    # if rook is attacking
+                    attackers.append(ROOK)
+
+                if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+                    # if knight is attacking
+                    attackers.append(KNIGHT)
+
+                bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                if bishopMoves & (self.pieceSet(col, BISHOP)):
+                    # if Bishop is attacking
+                    attackers.append(BISHOP)
+
+                queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+                if queenMoves & (self.pieceSet(col, QUEEN)):
+                    attackers.append(QUEEN)
+
+                kingMoves = self.maskBlockedSquares(self.kingMoves(kingSquareInt), kingSquareInt)
+                if kingMoves & self.pieceSet(col, KING):
+                    attackers.append(KING)
+
+        else:
+            opposite = (RED, YELLOW)
+            for col in opposite:
+                if self.pawnMoves(kingSquareInt, col, True) & self.pieceSet(col, PAWN):
+                    attackers.append(PAWN)
+                rookMoves = self.maskBlockedSquares(self.rookMoves(kingSquareInt), kingSquareInt)
+                if rookMoves & self.pieceSet(col, ROOK):
+                    # if rook is attacking
+                    attackers.append(ROOK)
+
+                if self.knightMoves(kingSquareInt) & self.pieceSet(col, KNIGHT):
+                    # if knight is attacking
+                    attackers.append(KNIGHT)
+
+                bishopMoves = self.maskBlockedSquares(self.bishopMoves(kingSquareInt), kingSquareInt)
+                if bishopMoves & (self.pieceSet(col, BISHOP)):
+                    # if Bishop is attacking
+                    attackers.append(BISHOP)
+
+                queenMoves = self.maskBlockedSquares(self.queenMoves(kingSquareInt), kingSquareInt)
+                if queenMoves & (self.pieceSet(col, QUEEN)):
+                    attackers.append(QUEEN)
+
+                kingMoves = self.maskBlockedSquares(self.kingMoves(kingSquareInt), kingSquareInt)
+                if kingMoves & self.pieceSet(col, KING):
+                    attackers.append(KING)
+
+        return attackers
+
     def attacked(self, square, color):
         """Checks if a square is attacked by a player. MUST BE CALLED W/ OPPOSITE TEAM AS COLOR"""
         if color == RED:
@@ -849,12 +909,27 @@ class Board(QObject):
 
     def countLegalMovesForPlayer(self, color):
         pieceTypes = [PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING]
+        RKBQVal = []
         totMoves = 0
         for ptype in pieceTypes:
             for pieceFR in self.getSquares(self.pieceSet(color, ptype)):
                 piece = self.square(pieceFR[0], pieceFR[1])
-                totMoves = totMoves + len(self.getSquares(self.legalMoves(ptype, piece, color)))
+                pMoves = len(self.getSquares(self.legalMoves(ptype, piece, color)))
+                RKBQVal.append(pMoves)
+                totMoves = totMoves + pMoves
         return totMoves
+
+    def countLegalMovesForPlayerV2(self, color):
+        pieceTypes = [PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING]
+        RBQVal = []
+        totMoves = 0
+        for ptype in pieceTypes:
+            for pieceFR in self.getSquares(self.pieceSet(color, ptype)):
+                piece = self.square(pieceFR[0], pieceFR[1])
+                pMoves = len(self.getSquares(self.legalMoves(ptype, piece, color)))
+                RBQVal.append(pMoves)
+                totMoves = totMoves + pMoves
+        return totMoves, RBQVal[1] + RBQVal[3] + RBQVal[4]
 
 
     def defenders(self, file, rank, color):
