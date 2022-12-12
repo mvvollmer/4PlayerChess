@@ -183,6 +183,7 @@ class TranspositionTable():
         piece = self.pieceToIndex(board.boardData[index])
         if piece != 1:
           h ^= self.zTable[i][j][piece]
+    return h
   
   # def updateHash(self, hash, boardData, fromRank, fromFile, toRank, toFile, enPassant, castling):
   #   """

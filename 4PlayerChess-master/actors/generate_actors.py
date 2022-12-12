@@ -32,16 +32,16 @@ def generate_actors(input_strings):
       players.append((player_colors[i], actor))
     elif player == 'minimax':
       if i % 2 == 0:
-        mStrat = MinimaxStrategy(player_colors[i], 4, Evaluation(), globalHistory1, globalTT1)
+        mStrat = MinimaxStrategy(player_colors[i], 3, Evaluation(), globalHistory1, globalTT1)
       else:
-        mStrat = MinimaxStrategy(player_colors[i], 4, Evaluation(), globalHistory2, globalTT2)
+        mStrat = MinimaxStrategy(player_colors[i], 3, Evaluation(), globalHistory2, globalTT2)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax2':
       if i % 2 == 0:
-        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory1, globalTT1)
+        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory1, None)
       else:
-        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory2, globalTT2)
+        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory2, None)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   
