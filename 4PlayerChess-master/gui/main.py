@@ -181,7 +181,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                   # print(f'({fromFile}, {fromRank}, {toFile}, {toRank}),')
                   self.algorithm.makeMove(fromFile, fromRank, toFile, toRank)
       if self.algorithm.currentPlayer == self.algorithm.NoPlayer:
-          curr_player = self.algorithm.playerQueue[3]
+          curr_player = self.algorithm.playerQueue[0]
           if curr_player in self.algorithm.aiActorPos:
               for actor in self.algorithm.actors:
                   if curr_player == actor[0]:
