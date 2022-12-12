@@ -368,6 +368,35 @@ class Board(QObject):
 
         return unProtSqs
 
+    def getNumAttackedSquares(self, color):
+        kingSquare = self.bitScanForward(self.pieceSet(color, KING))
+        file, rank = self.fileRank(kingSquare)
+        if file == 0 and rank == 0:
+            squares = [(file, rank + 1), (file + 1, rank), (file + 1, rank + 1)]
+        elif file == 0 and (rank != 0 or rank != 14):
+            squares = [(file, rank + 1), (file + 1, rank), (file + 1, rank + 1), (file + 1, rank - 1), (file, rank - 1)]
+        elif file == 0 and rank == 14:
+            squares = [(file + 1, rank), (file + 1, rank - 1), (file, rank - 1)]
+        elif file == 14 and rank == 0:
+            squares = [(file, rank + 1), (file - 1, rank), (file - 1, rank + 1)]
+        elif file == 14 and rank == 14:
+            squares = [(file, rank - 1), (file - 1, rank), (file - 1, rank - 1)]
+        elif file == 14 and (rank != 0 or rank != 14):
+            squares = [(file, rank + 1), (file - 1, rank), (file - 1, rank + 1), (file, rank - 1), (file - 1, rank -1)]
+        elif (file != 0 or file != 14) and rank == 0:
+            squares = [(file - 1, rank), (file + 1, rank), (file - 1, rank + 1), (file + 1, rank + 1), (file, rank + 1)]
+        elif (file != 0 or file != 14) and rank == 14:
+            squares = [(file - 1, rank), (file + 1, rank), (file - 1, rank - 1), (file + 1, rank - 1), (file, rank - 1)]
+        else:
+            squares = [(file - 1, rank - 1), (file - 1, rank), (file - 1, rank + 1),
+                       (file, rank - 1), (file, rank + 1),
+                       (file + 1, rank - 1), (file + 1, rank), (file + 1, rank + 1)]
+        attacked = []
+        for square in squares:
+            if self.attackedV2(self.square(square[0], square[1]), color):
+                attacked.append(square)
+        return len(attacked)
+
     def moreAttackersThanDefenders(self, file, rank, color):
         return len(self.attackersPieces(file, rank, color)) > len(self.defendersPieces(file, rank, color))
 

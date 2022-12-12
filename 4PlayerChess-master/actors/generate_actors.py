@@ -3,7 +3,7 @@ sys.path.append('./4PlayerChess-master/')
 from actors.actor import Actor
 from actors.randomStrategy import RandomStrategy
 from actors.minimaxStrategy import MinimaxStrategy
-from actors.evaluation import Evaluation, EvaluationV2
+from actors.evaluation import Evaluation, EvaluationV2, EvalForDepth4
 from actors.moveOrdering import GlobalHistoryHeuristic, TranspositionTable
 
 player_colors = ['r', 'b', 'y', 'g']
@@ -32,16 +32,16 @@ def generate_actors(input_strings):
       players.append((player_colors[i], actor))
     elif player == 'minimax':
       if i % 2 == 0:
-        mStrat = MinimaxStrategy(player_colors[i], 3, Evaluation(), globalHistory1, globalTT1)
+        mStrat = MinimaxStrategy(player_colors[i], 4, EvalForDepth4(), globalHistory1, globalTT1)
       else:
-        mStrat = MinimaxStrategy(player_colors[i], 3, Evaluation(), globalHistory2, globalTT2)
+        mStrat = MinimaxStrategy(player_colors[i], 4, EvalForDepth4(), globalHistory2, globalTT2)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
     elif player == 'minimax2':
       if i % 2 == 0:
-        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory1, None)
+        mStrat = MinimaxStrategy(player_colors[i], 1, Evaluation(), globalHistory1, None)
       else:
-        mStrat = MinimaxStrategy(player_colors[i], 4, EvaluationV2(), globalHistory2, None)
+        mStrat = MinimaxStrategy(player_colors[i], 1, Evaluation(), globalHistory2, None)
       actor = Actor(mStrat)
       players.append((player_colors[i], actor))
   
