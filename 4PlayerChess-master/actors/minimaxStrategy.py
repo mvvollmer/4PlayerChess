@@ -11,7 +11,7 @@ from actors.evaluation import EvalBase
 
 class MinimaxStrategy(Strategy):
     # self.eval = evaluation()
-    def __init__(self, player: str, maxDepth: int, eval: EvalBase, globalHistory: GlobalHistoryHeuristic, globalTT: TranspositionTable):
+    def __init__(self, player: str, maxDepth: int, eval: EvalBase, globalHistory: GlobalHistoryHeuristic or None, globalTT: TranspositionTable):
         super().__init__(player)
         self.maxDepth = maxDepth
         self.history = globalHistory
@@ -40,19 +40,20 @@ class MinimaxStrategy(Strategy):
         # print(boardCopy.boardData[154:168])
         # print(boardCopy.boardData[168:182])
         # print(boardCopy.boardData[182:196])
-        zhash = self.tt.computeHash(boardCopy)
-        node = self.tt.getPositionCalculations(zhash)
-        if node != None:
-          # print('found zhash', zhash)
-          # print('Using node:', node.nodeType, node.score, node.bestMove)
-          if node.nodeType == 'exact':
-            return node.score, node.bestMove
-          if node.nodeType == 'lower':
-            alpha = max(alpha, node.score)
-          if node.nodeType == 'upper':
-            beta = min(beta, node.score)
-          if alpha >= beta:
-            return node.score, node.bestMove
+        if self.tt is not None:
+          zhash = self.tt.computeHash(boardCopy)
+          node = self.tt.getPositionCalculations(zhash)
+          if node != None:
+            # print('found zhash', zhash)
+            # print('Using node:', node.nodeType, node.score, node.bestMove)
+            if node.nodeType == 'exact':
+              return node.score, node.bestMove
+            if node.nodeType == 'lower':
+              alpha = max(alpha, node.score)
+            if node.nodeType == 'upper':
+              beta = min(beta, node.score)
+            if alpha >= beta:
+              return node.score, node.bestMove
         colorNum = board.colorMapping[color]
         if boardCopy.checkMate(colorNum) or depth >= self.maxDepth: # since root is depth = 0
             # print('--- separator ---')
@@ -110,18 +111,19 @@ class MinimaxStrategy(Strategy):
             if alpha >= beta:
                 self.killerMoves.store_move(bestAction, depth)
                 self.history.store_move(bestAction, depth)
-                if maxEval <= alphaOrig:
-                  nodeType = 'upper'
-                elif maxEval >= beta:
-                  nodeType = 'lower'
-                else:
-                  nodeType = 'exact'
-                numPieces = len(list(filter(lambda x: x != ' ', boardCopy.boardData)))
-                self.tt.storePosition(zhash, nodeType, maxEval, numPieces, bestAction)
-                # print('adding position zhash', zhash)
-                # print('storing position:', nodeType, maxEval, numPieces, bestAction)
-                if random.random() > 0.8:
-                  self.tt.cleanTable(numPieces)
+                if self.tt is not None:
+                  if maxEval <= alphaOrig:
+                    nodeType = 'upper'
+                  elif maxEval >= beta:
+                    nodeType = 'lower'
+                  else:
+                    nodeType = 'exact'
+                  numPieces = len(list(filter(lambda x: x != ' ', boardCopy.boardData)))
+                  self.tt.storePosition(zhash, nodeType, maxEval, numPieces, bestAction)
+                  # print('adding position zhash', zhash)
+                  # print('storing position:', nodeType, maxEval, numPieces, bestAction)
+                  if random.random() > 0.8:
+                    self.tt.cleanTable(numPieces)
                 return maxEval, bestAction
         return maxEval, bestAction
 
