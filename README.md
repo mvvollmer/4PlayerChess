@@ -37,6 +37,8 @@ make checkmates, but in more nuanced situations where there is no obvious piece 
 obvious set up to get you there it had trouble coming up with good moves.
 
 ## Demo
+Minimax agents (Red/Yellow) vs. random agents(Green/Blue)
+
 https://github.com/user-attachments/assets/0cb1c07b-7be9-4332-b59a-481c700dba3c 
 
 ## Potential Improvements
