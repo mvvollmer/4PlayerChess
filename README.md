@@ -5,7 +5,8 @@ Teams: Red, Yellow | Blue, Green
 Once any player is checkmated, game over, other team wins! 
 Move order: red, blue, yellow, green
 
-Board:
+Board: 
+
 <img width="512" alt="Screenshot 2024-11-05 at 2 56 20 PM" src="https://github.com/user-attachments/assets/6428186d-6681-465d-9b97-29189d24f0b9">
 
 ## Why devlop a 4 Player Chess AI
